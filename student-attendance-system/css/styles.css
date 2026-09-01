@@ -1,0 +1,28 @@
+/* ========================================
+   Student Attendance System - Main Stylesheet
+   Modular CSS Architecture
+   ======================================== */
+
+/* 1. Design Tokens (must load first) */
+@import './variables.css';
+
+/* 2. Reset & Base Styles */
+@import './reset.css';
+
+/* 3. Layout (Sidebar navigation for admin/organizer) */
+@import './layout.css';
+
+/* 4. Student Dashboard & Subpages */
+@import './student-dashboard.css';
+
+/* 5. Role Dashboard (Admin & Organizer) */
+@import './role-dashboard.css';
+
+/* 6. Kiosk Page */
+@import './kiosk.css';
+
+/* ========================================
+   Additional page-specific styles can be
+   added here as needed (e.g., auth pages,
+   print styles, etc.)
+   ======================================== */

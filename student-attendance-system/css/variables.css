@@ -1,0 +1,421 @@
+/* ========================================
+   CSS Custom Properties (Design Tokens)
+   Modern refresh — ATTENDLY
+   Brand identity preserved: emerald green
+   ======================================== */
+
+:root {
+  /* ── Brand Colors ── */
+  --bs-primary: #0e9f6e;
+  --bs-primary-rgb: 14, 159, 110;
+  --bs-success: #0e9f6e;
+  --bs-success-rgb: 14, 159, 110;
+  --brand-700: #0b7f58;
+  --brand-600: #0e9f6e;
+  --brand-500: #20b486;
+  --brand-400: #4fce9f;
+  --brand-300: #8ae0c0;
+  --brand-100: #e3f7ee;
+  --brand-50: #f0fbf6;
+
+  /* ── Semantic Surfaces ── */
+  --color-bg-app: #f5f7f6;
+  --color-bg-app-grad: radial-gradient(1200px 600px at 85% -10%, #eafaf3 0%, rgba(234,250,243,0) 55%),
+                      radial-gradient(1000px 500px at -10% 110%, #eefbf3 0%, rgba(238,251,243,0) 50%),
+                      #f5f7f6;
+  --color-bg-card: #ffffff;
+  --color-bg-sidebar: #0d221b;
+  --color-bg-sidebar-hover: rgba(14, 159, 110, .16);
+  --color-bg-input: #f4f8f6;
+  --color-bg-success-light: #e7f8f0;
+  --color-bg-warning-light: #fff6e0;
+  --color-bg-danger-light: #fdecec;
+
+  /* ── Border Colors ── */
+  --color-border-default: #e6ece8;
+  --color-border-input: #dce5df;
+  --color-border-sidebar: rgba(255,255,255,.08);
+  --color-border-table: #eef1ef;
+  --color-border-focus: #0e9f6e;
+
+  /* ── Text Colors ── */
+  --color-text-primary: #1c2b24;
+  --color-text-heading: #14221b;
+  --color-text-muted: #7c8b83;
+  --color-text-sidebar: rgba(226,240,233,.72);
+  --color-text-sidebar-active: #ffffff;
+  --color-text-success: #0b7f58;
+  --color-text-success-light: #12a878;
+  --color-text-warning: #a06a00;
+  --color-text-danger: #c33535;
+
+  /* ── Severity Badge Colors ── */
+  --color-badge-warning: #f5b301;
+  --color-badge-probation: #f2701b;
+  --color-badge-suspension: #dc3545;
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* ── Spacing ── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 40px;
+
+  /* ── Border Radius ── */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* ── Shadows — soft, layered, modern ── */
+  --shadow-xs: 0 1px 2px rgba(20, 34, 27, .04);
+  --shadow-card: 0 1px 2px rgba(20,34,27,.04), 0 8px 24px rgba(20,34,27,.05);
+  --shadow-card-hover: 0 2px 4px rgba(20,34,27,.05), 0 18px 40px rgba(20,34,27,.10);
+  --shadow-focus: 0 0 0 4px rgba(14, 159, 110, .16);
+  --shadow-pop: 0 12px 32px rgba(20,34,27,.12), 0 2px 8px rgba(20,34,27,.06);
+
+  /* ── Transitions ── */
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --transition-fast: .18s;
+  --transition-normal: .28s;
+
+  /* ── Layout ── */
+  --sidebar-width: 244px;
+  --topbar-height: 76px;
+  --topbar-height-mobile: 62px;
+}
+
+/* ========================================
+   Dark Theme Overrides
+   ======================================== */
+
+[data-theme="dark"] {
+  --color-bg-app: #0b1210;
+  --color-bg-app-grad: radial-gradient(1200px 600px at 85% -10%, #0f2419 0%, rgba(15,36,25,0) 55%),
+                       radial-gradient(1000px 500px at -10% 110%, #122b1c 0%, rgba(18,43,28,0) 50%),
+                       #0b1210;
+  --color-bg-card: #131d18;
+  --color-bg-sidebar: #080f0c;
+  --color-bg-sidebar-hover: rgba(14, 159, 110, .18);
+  --color-bg-input: #18251f;
+  --color-bg-success-light: #0f2419;
+  --color-bg-warning-light: #2a250f;
+  --color-bg-danger-light: #2a1416;
+
+  --color-border-default: #1f3027;
+  --color-border-input: #22322a;
+  --color-border-sidebar: rgba(255,255,255,.06);
+  --color-border-table: #18251f;
+  --color-border-focus: #20b486;
+
+  --color-text-primary: #e2ece6;
+  --color-text-heading: #f0f6f2;
+  --color-text-muted: #8fa399;
+  --color-text-sidebar: rgba(226,240,233,.64);
+  --color-text-sidebar-active: #ffffff;
+  --color-text-success: #4fce9f;
+  --color-text-success-light: #5fd8ab;
+  --color-text-warning: #e5b53c;
+  --color-text-danger: #ef8288;
+
+  --color-badge-warning: #e5b53c;
+  --color-badge-probation: #ee9442;
+  --color-badge-suspension: #ec5864;
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-card: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.30);
+  --shadow-card-hover: 0 2px 4px rgba(0,0,0,.35), 0 20px 44px rgba(0,0,0,.42);
+  --shadow-focus: 0 0 0 4px rgba(20, 180, 134, .25);
+  --shadow-pop: 0 14px 36px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+
+  /* Bootstrap design tokens — re-theme baseline components so utilities,
+     input groups, tabs, alerts, dropdowns etc. follow the theme too. */
+  --bs-body-bg: #0b1210;
+  --bs-body-color: #e2ece6;
+  --bs-secondary-color: #a5b6ad;
+  --bs-secondary-bg: #131d18;
+  --bs-tertiary-bg: #18251f;
+  --bs-emphasis-color: #f0f6f2;
+  --bs-border-color: #1f3027;
+  --bs-card-bg: #131d18;
+  --bs-card-color: #e2ece6;
+  --bs-heading-color: #f0f6f2;
+  --bs-link-color: #4fce9f;
+  --bs-link-hover-color: #5fd8ab;
+  --bs-primary: #20b486;
+  --bs-primary-rgb: 32, 180, 134;
+  --bs-success-bg: #0f2419;
+  --bs-success-text-emphasis: #5fd8ab;
+  --bs-warning-bg: #2a250f;
+  --bs-warning-text-emphasis: #e5b53c;
+  --bs-danger-bg: #2a1416;
+  --bs-danger-text-emphasis: #ef8288;
+}
+
+[data-theme="dark"] body {
+  background: var(--color-bg-app-grad);
+  background-attachment: fixed;
+  color: var(--color-text-primary);
+}
+
+/* ── Shared surface / component overrides ── */
+
+[data-theme="dark"] .dashboard-card,
+[data-theme="dark"] .student-table,
+[data-theme="dark"] .role-action-card,
+[data-theme="dark"] .admin-stat-card,
+[data-theme="dark"] .dash-panel,
+[data-theme="dark"] .activity-panel,
+[data-theme="dark"] .kiosk-card,
+[data-theme="dark"] .kiosk-result {
+  background: var(--color-bg-card);
+  border-color: var(--color-border-default);
+}
+
+[data-theme="dark"] .stat-card-featured {
+  background: linear-gradient(135deg, #131d18 0%, #0f2419 100%);
+  border-color: #173728;
+}
+
+[data-theme="dark"] .enrollment-status-card {
+  background: linear-gradient(135deg, #131d18 0%, #2a1416 100%);
+}
+
+[data-theme="dark"] .reenrollment-request-card {
+  background: linear-gradient(135deg, #131d18 0%, #2a250f 100%);
+}
+
+[data-theme="dark"] .stat-value,
+[data-theme="dark"] .card-heading h2,
+[data-theme="dark"] .role-intro h1,
+[data-theme="dark"] .dashboard-intro h1,
+[data-theme="dark"] .subpage-intro h1 {
+  color: var(--color-text-heading);
+}
+
+[data-theme="dark"] .announcement-item strong { color: #e2ece6; }
+
+[data-theme="dark"] .modal-content {
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer { border-color: var(--color-border-default); }
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-input);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .form-control[readonly] {
+  background: #0f1914;
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .table { color: var(--color-text-primary); }
+
+[data-theme="dark"] .card { background: var(--color-bg-card); }
+
+[data-theme="dark"] .progress-track { background: #22322a; }
+
+[data-theme="dark"] .donut-chart::before { background: var(--color-bg-card); }
+
+[data-theme="dark"] .donut-chart {
+  background: conic-gradient(var(--bs-primary) var(--present-rate, 0%), #22322a 0);
+}
+
+[data-theme="dark"] .calendar-cell { color: #b7c6bd; }
+
+[data-theme="dark"] .reader-instruction,
+[data-theme="dark"] .biometric-guide,
+[data-theme="dark"] .appeal-guide,
+[data-theme="dark"] .profile-biometric-card {
+  background: var(--color-bg-success-light);
+  border-color: var(--color-border-default);
+}
+
+[data-theme="dark"] .weather-main strong,
+[data-theme="dark"] .weather-main span { color: #e2ece6; }
+
+[data-theme="dark"] .student-profile small,
+[data-theme="dark"] .role-profile small { color: #8fa399; }
+
+[data-theme="dark"] .toast {
+  background: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .icon-button {
+  background: var(--color-bg-card);
+  border-color: var(--color-border-default);
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .appeal-guide ol,
+[data-theme="dark"] .profile-note,
+[data-theme="dark"] .biometric-guide p { color: #8fa399; }
+
+[data-theme="dark"] .announcement-icon { background: var(--color-bg-success-light); }
+
+[data-theme="dark"] .calendar-cell.has-event {
+  background: #0f2419;
+  color: #4fce9f;
+}
+
+[data-theme="dark"] .btn-close { filter: invert(1); }
+
+[data-theme="dark"] {
+  --bs-modal-bg: #131d18;
+  --bs-modal-color: #e2ece6;
+  --bs-modal-header-border-color: #1f3027;
+  --bs-modal-footer-border-color: #1f3027;
+}
+
+/* Auth / login page */
+.auth-page { background: var(--color-bg-app); }
+
+/* Status pills & appeal badges */
+[data-theme="dark"] .enrollment-pill.enrolled,
+[data-theme="dark"] .appeal-status.approved {
+  background: var(--color-bg-success-light);
+  color: var(--color-text-success);
+}
+
+[data-theme="dark"] .enrollment-pill.needs-reenrollment {
+  background: var(--color-bg-warning-light);
+  color: var(--color-text-warning);
+}
+
+[data-theme="dark"] .enrollment-pill.not-enrolled {
+  background: var(--color-bg-danger-light);
+  color: var(--color-text-danger);
+}
+
+/* Calendar markers */
+[data-theme="dark"] .calendar-today { background: var(--color-bg-input); }
+[data-theme="dark"] .calendar-dot { background: var(--color-bg-success-light); }
+
+/* Announcements & donut chart */
+[data-theme="dark"] .announcement-icon.event-icon {
+  background: var(--color-bg-success-light);
+  color: var(--color-text-success);
+}
+
+[data-theme="dark"] .chart-legend > div { color: var(--color-text-muted); }
+[data-theme="dark"] .chart-legend strong { color: var(--color-text-heading); }
+[data-theme="dark"] .donut-chart small { color: var(--color-text-muted); }
+[data-theme="dark"] .stat-heading i,
+[data-theme="dark"] .card-menu { color: var(--color-text-muted); }
+
+/* Forms & biometrics */
+[data-theme="dark"] .appeal-card .form-label,
+[data-theme="dark"] .profile-card .form-label,
+[data-theme="dark"] .biometric-enroll-card .form-label { color: var(--color-text-muted); }
+
+[data-theme="dark"] .verification-checks,
+[data-theme="dark"] .biometric-flow,
+[data-theme="dark"] .biometric-status { color: var(--color-text-muted); }
+
+[data-theme="dark"] .biometric-flow b {
+  background: var(--color-bg-input);
+  color: var(--color-text-success);
+}
+
+[data-theme="dark"] .reader-instruction span { color: var(--color-text-muted); }
+
+[data-theme="dark"] .profile-avatar {
+  background: var(--color-bg-input);
+  color: var(--color-text-success);
+}
+
+/* Tables */
+[data-theme="dark"] .student-table { color: var(--color-text-primary); }
+
+[data-theme="dark"] .student-table thead th {
+  border-bottom-color: var(--color-border-table);
+  color: var(--color-text-muted);
+}
+
+/* Borders & topbar */
+[data-theme="dark"] .student-topbar,
+[data-theme="dark"] .role-topbar {
+  border-bottom-color: var(--color-border-default);
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .announcement-item { border-bottom-color: var(--color-border-default); }
+
+[data-theme="dark"] .appeal-help,
+[data-theme="dark"] .appeal-submitted p { color: var(--color-text-muted); }
+
+/* Muted secondary text on cards */
+[data-theme="dark"] .intro-copy,
+[data-theme="dark"] .stat-heading,
+[data-theme="dark"] .stat-card small,
+[data-theme="dark"] .chart-caption,
+[data-theme="dark"] .calendar-weekdays,
+[data-theme="dark"] .calendar-key,
+[data-theme="dark"] .weather-details,
+[data-theme="dark"] .weather-location,
+[data-theme="dark"] .student-breadcrumb,
+[data-theme="dark"] .topbar-date,
+[data-theme="dark"] .empty-records { color: var(--color-text-muted); }
+
+/* Modal alert (re-enrollment) */
+[data-theme="dark"] .alert-warning {
+  background-color: var(--bs-warning-bg);
+  color: var(--bs-warning-text-emphasis);
+  border-color: var(--bs-border-color);
+}
+
+/* Report tabs */
+[data-theme="dark"] .nav-tabs { border-bottom-color: var(--bs-border-color); }
+
+[data-theme="dark"] .nav-tabs .nav-link {
+  color: var(--color-text-muted);
+  border-color: var(--bs-border-color);
+}
+
+[data-theme="dark"] .nav-tabs .nav-link:hover { color: var(--color-text-heading); }
+
+[data-theme="dark"] .nav-tabs .nav-link.active {
+  color: var(--color-text-heading);
+  background: var(--color-bg-card);
+  border-color: var(--bs-border-color);
+}
+
+/* Login demo panel */
+[data-theme="dark"] .demo-login-panel { border-top-color: var(--color-border-default); }
+[data-theme="dark"] .demo-login-title { color: var(--color-text-muted); }
+
+[data-theme="dark"] .demo-account {
+  border-color: var(--color-border-input);
+  background: var(--color-bg-input);
+  color: var(--color-text-heading);
+}
+
+[data-theme="dark"] .demo-account > i:last-child { color: var(--color-text-success-light); }
+[data-theme="dark"] .demo-account small { color: var(--color-text-muted); }
+
+[data-theme="dark"] .demo-account:hover {
+  border-color: var(--bs-primary);
+  background: var(--color-bg-success-light);
+}
+
+[data-theme="dark"] .demo-password { color: var(--color-text-muted); }

@@ -1,0 +1,52 @@
+/* ========================================
+   Kiosk Page Styles — Modern refresh
+   ======================================== */
+
+.kiosk-page {
+  background: var(--color-bg-app-grad);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.kiosk-container { max-width: 1080px; }
+
+.kiosk-status {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .45rem .85rem;
+  border: 1px solid var(--brand-100);
+  border-radius: var(--radius-pill);
+  color: var(--brand-700);
+  background: var(--brand-50);
+  font-size: .85rem;
+  font-weight: 650;
+  box-shadow: var(--shadow-xs);
+}
+
+.kiosk-status i { color: var(--brand-500); }
+
+.kiosk-card,
+.kiosk-result {
+  min-height: 300px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-lg);
+  transition: box-shadow var(--transition-normal) var(--ease);
+}
+
+.kiosk-card:hover,
+.kiosk-result:hover { box-shadow: var(--shadow-card-hover); }
+
+.kiosk-icon {
+  font-size: 4rem;
+  color: var(--brand-600);
+}
+
+/* Responsive - Kiosk */
+@media (max-width: 575px) {
+  .kiosk-container { padding-top: 2rem !important; }
+  .kiosk-card,
+  .kiosk-result { min-height: 0; }
+}

@@ -1,0 +1,120 @@
+/* ========================================
+   Main App Layout (Admin/Organizer Sidebar Layout)
+   Modern refresh — ATTENDLY
+   ======================================== */
+
+/* Sidebar layout for non-dashboard pages */
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) {
+  padding-left: var(--sidebar-width);
+}
+
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  display: block;
+  width: var(--sidebar-width);
+  padding: 28px 18px;
+  background:
+    radial-gradient(600px 300px at 50% -10%, rgba(14,159,110,.22) 0%, rgba(14,159,110,0) 60%),
+    var(--color-bg-sidebar) !important;
+}
+
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar > .container {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+}
+
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar .navbar-brand {
+  padding: 0 13px 28px;
+  border-bottom: 1px solid var(--color-border-sidebar);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar .d-flex {
+  display: grid !important;
+  gap: 10px;
+  margin-top: auto;
+  border-top: 1px solid var(--color-border-sidebar);
+  padding-top: 20px;
+}
+
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar .navbar-text {
+  padding: 0 12px;
+  color: var(--color-text-sidebar) !important;
+}
+
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar .btn {
+  border-color: rgba(255,255,255,.2);
+  color: #fff;
+  background: rgba(255,255,255,.03);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast) var(--ease);
+}
+
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar .btn:hover {
+  background: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+/* Mobile sidebar collapse */
+@media (max-width: 650px) {
+  body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) {
+    padding-left: 0;
+    padding-top: 78px;
+  }
+
+  body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar {
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    height: 78px;
+    padding: 16px;
+  }
+
+  body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar > .container {
+    min-height: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar .navbar-brand {
+    border-bottom: 0;
+    padding: 0;
+  }
+
+  body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar .d-flex {
+    display: flex !important;
+    align-items: center;
+    margin-top: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+/* Badge severity colors */
+.badge-warning-severity {
+  background-color: var(--color-badge-warning);
+  color: #212529;
+}
+
+.badge-probation-severity {
+  background-color: var(--color-badge-probation);
+  color: #fff;
+}
+
+.badge-suspension-severity {
+  background-color: var(--color-badge-suspension);
+  color: #fff;
+}
+
+/* ── Shared severity badge polish ── */
+.badge { font-weight: 600; letter-spacing: .02em; }
