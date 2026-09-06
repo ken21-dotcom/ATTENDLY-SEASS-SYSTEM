@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (loginForm) {
     loginForm.addEventListener('submit', function(e) {
       e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+      const email = document.getElementById('login-email-field').value.trim();
+      const password = document.getElementById('login-password-field').value.trim();
       loginWithCredentials(email, password);
     });
   }

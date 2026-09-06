@@ -4,14 +4,14 @@ function showToast(type, message) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
   const toastEl = document.createElement('div');
-  const bgClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-primary';
-  toastEl.className = `toast align-items-center text-white ${bgClass} border-0`;
+  const variantClass = type === 'success' ? 'toast-success' : type === 'error' ? 'toast-error' : 'toast-info';
+  toastEl.className = `toast align-items-center border-0 ${variantClass}`;
   toastEl.setAttribute('role', 'alert');
   toastEl.style.marginBottom = '0.5rem';
   toastEl.innerHTML = `
     <div class="d-flex">
       <div class="toast-body">${message}</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
   `;
   container.appendChild(toastEl);

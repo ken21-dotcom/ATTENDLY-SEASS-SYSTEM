@@ -4,11 +4,11 @@
    ======================================== */
 
 /* Sidebar layout for non-dashboard pages */
-body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) {
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page):not(.auth-page) {
   padding-left: var(--sidebar-width);
 }
 
-body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) > .navbar {
+body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page):not(.auth-page) > .navbar {
   position: fixed;
   top: 0;
   bottom: 0;
@@ -66,7 +66,7 @@ body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(
 
 /* Mobile sidebar collapse */
 @media (max-width: 650px) {
-  body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) {
+  body:not(.bg-light):not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page):not(.auth-page) {
     padding-left: 0;
     padding-top: 78px;
   }
