@@ -9,6 +9,13 @@
   color: var(--color-text-primary);
 }
 
+/* Mobile: fixed background attachment is expensive on mobile GPUs */
+@media (max-width: 768px) {
+  .role-dashboard-page {
+    background-attachment: scroll;
+  }
+}
+
 /* --- Role Shell (Sidebar + Main) --- */
 .role-shell {
   display: flex;
@@ -36,8 +43,8 @@
   gap: 10px;
   padding: 0 13px 28px;
   color: #fff;
-  font-size: 1.08rem;
-  font-weight: 800;
+  font-size: 1.05rem;
+  font-weight: 700;
   letter-spacing: .02em;
   text-decoration: none;
 }
@@ -147,9 +154,6 @@
   position: sticky;
   top: 0;
   background: var(--color-bg-app);
-  background: color-mix(in srgb, var(--color-bg-app) 82%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   z-index: 20;
 }
 
@@ -165,7 +169,7 @@
   margin: 0;
   color: var(--color-text-heading);
   font-size: clamp(1.8rem, 3.2vw, 2.7rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -.02em;
   line-height: 1.15;
 }
@@ -184,17 +188,13 @@
   border-radius: var(--radius-lg);
   background: var(--color-bg-card);
   box-shadow: var(--shadow-card);
-  transition: box-shadow var(--transition-normal) var(--ease), transform var(--transition-normal) var(--ease);
+  transition: box-shadow var(--transition-normal) var(--ease), transform var(--transition-normal) var(--ease), border-color var(--transition-normal) var(--ease);
+  position: relative;
 }
 
-.role-action-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }
+.role-action-card:hover { box-shadow: var(--shadow-card-hover); border-color: var(--brand-100); }
 
 .role-action-card { min-height: 210px; }
-
-.featured-role-card {
-  border-color: var(--brand-100);
-  background: linear-gradient(150deg, var(--brand-50) 0%, #fff 100%);
-}
 
 .role-card-body { padding: 22px; }
 
@@ -252,8 +252,9 @@
   color: var(--bs-primary);
   font-size: 2.1rem;
   line-height: 1;
-  letter-spacing: -.02em;
+  letter-spacing: -.03em;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .admin-stat-card i {
@@ -285,7 +286,11 @@
   font-size: .74rem;
   font-weight: 600;
   text-decoration: none;
-  transition: all var(--transition-fast) var(--ease);
+  transition: border-color var(--transition-fast) var(--ease),
+              background var(--transition-fast) var(--ease),
+              color var(--transition-fast) var(--ease),
+              transform var(--transition-fast) var(--ease),
+              box-shadow var(--transition-fast) var(--ease);
 }
 
 .role-link-grid a i {
@@ -297,8 +302,6 @@
   border-color: var(--brand-100);
   color: var(--brand-700);
   background: var(--brand-50);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
 }
 
 /* Responsive - Role Dashboard */

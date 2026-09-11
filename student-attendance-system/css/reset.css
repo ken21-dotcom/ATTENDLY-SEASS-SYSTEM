@@ -20,6 +20,8 @@ body {
   line-height: 1.55;
   color: var(--color-text-primary);
   background: var(--color-bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Default app background */
@@ -28,7 +30,7 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
 }
 
 /* Scrollbar refinement */
-::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb {
   background: rgba(124, 139, 131, .28);
   border-radius: 8px;
@@ -72,24 +74,26 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
   border-radius: var(--radius-sm);
   font-weight: 600;
   letter-spacing: .01em;
-  transition: transform var(--transition-fast) var(--ease), box-shadow var(--transition-fast) var(--ease), background-color var(--transition-fast) var(--ease), border-color var(--transition-fast) var(--ease);
+  transition: transform 160ms var(--ease), box-shadow 160ms var(--ease), background-color 160ms var(--ease), border-color 160ms var(--ease), color 160ms var(--ease);
 }
 
-.btn:active { transform: translateY(0); }
+.btn:active {
+  transform: scale(.97);
+  transition-duration: 100ms;
+}
 
 .btn-primary,
 .btn-success {
   background: var(--bs-primary);
   border-color: var(--bs-primary);
-  box-shadow: 0 4px 14px rgba(var(--bs-primary-rgb), .24);
+  box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), .18);
 }
 
 .btn-primary:hover,
 .btn-success:hover {
   background: var(--brand-700);
   border-color: var(--brand-700);
-  box-shadow: 0 8px 22px rgba(var(--bs-primary-rgb), .32);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(var(--bs-primary-rgb), .24);
 }
 
 .btn-outline-primary,
@@ -105,12 +109,20 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
   border-color: var(--bs-primary);
 }
 
-/* Focus states for accessibility */
+/* Focus states for accessibility — WCAG 2.4.7 compliant
+   Visible outline with sufficient contrast on both light and dark themes. */
 .form-control:focus,
 .form-select:focus,
 .btn:focus {
   border-color: var(--color-border-focus);
   box-shadow: var(--shadow-focus);
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* Buttons keep outline but suppress the duplicate ring shadow */
+.btn:focus {
+  box-shadow: var(--shadow-focus), 0 0 0 2px var(--color-bg-card);
 }
 
 /* ── Forms — modern field styling ── */
@@ -118,7 +130,7 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
 .form-select {
   border-color: var(--color-border-input);
   border-radius: var(--radius-sm);
-  transition: border-color var(--transition-fast) var(--ease), box-shadow var(--transition-fast) var(--ease), background-color var(--transition-fast) var(--ease);
+  transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease), background-color 160ms var(--ease);
 }
 
 .form-control:hover,
@@ -155,6 +167,17 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
 
 /* Table improvements */
 .table-hover tbody tr:hover { background-color: rgba(14, 159, 110, .04); }
+
+/* Selection color — green tint matching the brand */
+::selection {
+  background: rgba(14, 159, 110, .18);
+  color: var(--color-text-heading);
+}
+
+/* Smooth scrolling */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 
 /* Default card styling for non-dashboard pages */
 body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard-page):not(.kiosk-page) .card {
@@ -214,7 +237,6 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
 .demo-account:hover {
   border-color: var(--bs-primary);
   background: var(--brand-50);
-  transform: translateY(-1px);
   box-shadow: var(--shadow-xs);
 }
 

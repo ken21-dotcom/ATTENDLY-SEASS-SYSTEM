@@ -1,6 +1,6 @@
 /* ========================================
    Auth / Login Page — ATTENDLY
-   Campus-identity design rooted in JHCSC
+   Minimalist campus identity
    ======================================== */
 
 html,
@@ -57,11 +57,11 @@ body {
 }
 
 /* ── Slideshow layers ──
-   Five image <div>s sit behind the gradient overlay.
-   Each fills the hero at cover size. The keyframe
-   animation fades each slide in/out through black
-   over 2 seconds, with each slide visible for ~5s.
-   Total cycle: 36s (4 slides × 9s each). */
+   The four image <div>s sit behind the gradient overlay. Each fills the
+   hero at cover size. Slides crossfade over one another — each fades in
+   quickly on top of the outgoing one, holds, then dissolves out as the
+   next fades in — so there is never a dip to black between slides.
+   Total cycle: 20s (4 slides × 5s each). */
 
 .auth-hero-slides {
   position: absolute;
@@ -76,32 +76,31 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   opacity: 0;
-  animation: heroFade 32s infinite;
+  animation: heroFade 20s infinite;
 }
 
 .auth-hero-slide:nth-child(1) { animation-delay: 0s; }
-.auth-hero-slide:nth-child(2) { animation-delay: 8s; }
-.auth-hero-slide:nth-child(3) { animation-delay: 16s; }
-.auth-hero-slide:nth-child(4) { animation-delay: 24s; }
+.auth-hero-slide:nth-child(2) { animation-delay: 5s; }
+.auth-hero-slide:nth-child(3) { animation-delay: 10s; }
+.auth-hero-slide:nth-child(4) { animation-delay: 15s; }
 
 @keyframes heroFade {
-  0%    { opacity: 0; }   /* fade in starts */
-  25%   { opacity: 1; }   /* fully visible */
-  75%   { opacity: 1; }   /* visible for 4 seconds */
-  100%  { opacity: 0; }   /* fade out to black, stay hidden */
+  0%    { opacity: 0; }   /* incoming, hidden behind the current slide */
+  6%    { opacity: 1; }   /* quick fade-in on top of the outgoing slide */
+  44%   { opacity: 1; }   /* hold at full opacity */
+  50%   { opacity: 0; }   /* dissolve out as the next slide fades in */
+  100%  { opacity: 0; }   /* stay hidden until its next turn */
 }
 
-/* Gradient overlay — deep forest green, bottom-heavy for legibility */
+/* Gradient overlay — deep forest green, two-stop for clean legibility */
 .auth-hero::after {
   content: '';
   position: absolute;
   inset: 0;
   background:
     linear-gradient(180deg,
-      rgba(12, 32, 24, .18) 0%,
-      rgba(16, 40, 30, .42) 40%,
-      rgba(18, 46, 34, .78) 72%,
-      rgba(13, 34, 25, .96) 100%
+      rgba(12, 32, 24, .10) 0%,
+      rgba(13, 34, 25, .88) 100%
     );
   z-index: 1;
 }
@@ -115,14 +114,22 @@ body {
 
 /* Main heading */
 .auth-hero h1 {
-  margin: 0 0 20px;
-  font-family: var(--font-display);
-  font-size: clamp(2.3rem, 4.2vw, 3.4rem);
-  font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: -.01em;
+  margin: 0 0 18px;
+  font-family: var(--font-body);
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.02em;
   color: #fff;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, .25);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .20);
+}
+
+/* Italic accent within heading — serif italic in accent green */
+.auth-hero h1 em {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--campus-accent);
 }
 
 /* Subheading */
@@ -130,89 +137,321 @@ body {
   margin: 0;
   max-width: 400px;
   font-family: var(--font-body);
-  font-size: .98rem;
+  font-size: .92rem;
   font-weight: 400;
   line-height: 1.65;
-  color: rgba(255, 255, 255, .82);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, .18);
+  color: rgba(255, 255, 255, .78);
 }
 
-/* ── Feature details — clean text list, no cards ──
-   Two equal-weight claims separated by whitespace only; the campus
-   photo already provides the visual richness, so the list stays bare. */
+/* ── Feature details — small pill chips ──
+   Translucent white fill with gold icon accent.
+   Lighter weight, more breathing room. */
 .auth-hero-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 22px;
-  margin-top: 40px;
+  gap: 10px;
+  margin-top: 44px;
+  padding-top: 28px;
+}
+
+/* ── Hero slide content ── */
+.auth-hero-slide-content {
+  display: none;
+}
+
+.auth-hero-slide-content.active {
+  display: block;
+  animation: slideFadeIn .5s var(--ease) both;
+}
+
+/* Enter: rise + fade while a touch of blur masks the hand-off from the
+   outgoing slide, so the swap reads as one continuous motion. */
+@keyframes slideFadeIn {
+  from { opacity: 0; transform: translateY(10px); filter: blur(3px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-hero-slide-content.active {
+    animation: none;
+  }
+}
+
+/* ── Hero carousel controls ── */
+.auth-hero-controls {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 32px;
   padding-top: 24px;
+}
+
+.auth-hero-indicators {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Autoplay progress indicators —
+   Active indicator is an elongated pill whose fill bar animates
+   left→right over the slide dwell time; inactive are plain dots. */
+.auth-hero-progress {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-circle);
+  border: 1.5px solid rgba(255, 255, 255, .45);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: width .3s var(--ease),
+              border-color .3s var(--ease),
+              background-color .3s var(--ease);
+  overflow: hidden;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-hero-progress:hover {
+    border-color: rgba(255, 255, 255, .75);
+  }
+}
+
+.auth-hero-progress.active {
+  width: 28px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .25);
+}
+
+.auth-hero-progress-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--campus-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  visibility: hidden;
+}
+
+/* Animating fill on the active indicator — paused via animation-play-state
+   so it freezes (and resumes) in lockstep with the autoplay timer. */
+.auth-hero-progress.active .auth-hero-progress-fill {
+  visibility: visible;
+  animation: heroProgressFill 5s linear forwards;
+}
+
+.auth-hero-progress.paused .auth-hero-progress-fill {
+  animation-play-state: paused;
+}
+
+.auth-hero-progress.running .auth-hero-progress-fill {
+  animation-play-state: running;
+}
+
+@keyframes heroProgressFill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.auth-hero-slide-label {
+  font-family: var(--font-body);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: rgba(255, 255, 255, .55);
+  text-transform: uppercase;
+}
+
+.auth-hero-slide-num {
+  color: rgba(255, 255, 255, .9);
+}
+
+.auth-hero-arrows {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.auth-hero-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-circle);
+  border: 1px solid rgba(255, 255, 255, .2);
+  background: rgba(255, 255, 255, .06);
+  color: rgba(255, 255, 255, .7);
+  font-size: .85rem;
+  cursor: pointer;
+  transition: transform 160ms var(--ease),
+              background-color 160ms var(--ease),
+              border-color 160ms var(--ease),
+              color 160ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-hero-arrow:hover {
+    background: rgba(255, 255, 255, .16);
+    border-color: rgba(255, 255, 255, .4);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+}
+
+.auth-hero-arrow:active {
+  transform: translateY(0) scale(.94);
+  transition-duration: 80ms;
 }
 
 .auth-hero-detail {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .14);
   font-family: var(--font-body);
-  font-size: .9rem;
-  font-weight: 600;
+  font-size: .8rem;
+  font-weight: 500;
   letter-spacing: .01em;
-  color: rgba(255, 255, 255, .9);
+  color: rgba(255, 255, 255, .88);
+  text-decoration: none;
+  transition: transform 160ms var(--ease),
+              background-color 160ms var(--ease),
+              border-color 160ms var(--ease),
+              box-shadow 160ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-hero-detail:hover {
+    background: rgba(255, 255, 255, .14);
+    border-color: rgba(255, 255, 255, .28);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+  }
+}
+
+.auth-hero-detail i {
+  font-size: .9rem;
+  color: var(--campus-accent);
+  transition: transform 160ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-hero-detail:hover i {
+    transform: translateY(-1px);
+  }
 }
 
 /* ========================================
    RIGHT — Form Panel
-   Warm cream surface, identity carried by type
+   Warm cream surface, generous breathing room
    ======================================== */
 .auth-form-panel {
   flex: 0 0 auto;
-  width: 460px;
+  width: 480px;
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 52px 56px;
+  padding: 56px 64px;
   background: var(--campus-cream);
   position: relative;
   overflow: hidden;
-  min-width: 460px;
+  min-width: 480px;
 }
 
 /* Form brand — logo lockup: fingerprint mark + wordmark.
-   The fingerprint is a rounded, soft-tech glyph, so it pairs with a
-   clean, confident sans rather than a decorative serif. */
+   Restrained, confident; weight and size are pulled back. */
 .auth-form-brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 44px;
+  gap: 10px;
+  margin-bottom: 48px;
   color: var(--campus-bark);
 }
 
 .auth-form-brand i {
-  font-size: 1.55rem;
+  font-size: 1.4rem;
   line-height: 1;
   color: var(--campus-green);
 }
 
+/* Logo badge — rounded-square with gradient + glow */
+.auth-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1a2e25 0%, var(--campus-green) 100%);
+  box-shadow: 0 0 12px rgba(26, 77, 58, .30),
+              0 2px 6px rgba(0, 0, 0, .12);
+  flex-shrink: 0;
+  transition: transform 160ms var(--ease),
+              box-shadow 160ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-logo-badge:hover {
+    box-shadow: 0 0 18px rgba(26, 77, 58, .40),
+                0 4px 10px rgba(0, 0, 0, .16);
+    transform: translateY(-1px);
+  }
+}
+
+.auth-logo-badge:active {
+  transform: translateY(0) scale(.96);
+  transition-duration: 80ms;
+}
+
+.auth-logo-badge i {
+  font-size: 1.15rem;
+  line-height: 1;
+  color: #fff;
+}
+
 .auth-form-brand span {
   font-family: var(--font-body);
-  font-size: 1.45rem;
-  font-weight: 700;
-  letter-spacing: -.01em;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
   line-height: 1;
+}
+
+/* BIOMETRICS badge — inline pill next to wordmark */
+.auth-badge-biometrics {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  margin-left: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--campus-green);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 
 /* Form header */
 .auth-form-header {
-  margin-bottom: 36px;
+  margin-bottom: 40px;
 }
 
 .auth-form-header h2 {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-family: var(--font-body);
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -.01em;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
   line-height: 1.2;
   color: var(--campus-bark);
 }
@@ -220,35 +459,43 @@ body {
 .auth-form-header p {
   margin: 0;
   font-family: var(--font-body);
-  font-size: .95rem;
-  line-height: 1.5;
-  color: var(--campus-fog);
+  font-size: .9rem;
+  line-height: 1.55;
+  color: var(--campus-fog-strong);
 }
 
 /* ── Form fields ── */
 .auth-form .form-label {
   font-family: var(--font-body);
-  font-size: .82rem;
+  font-size: .78rem;
   font-weight: 600;
-  letter-spacing: .01em;
+  letter-spacing: .02em;
   color: var(--campus-bark);
+}
+
+/* Uppercase label variant */
+.auth-form .auth-label-uppercase {
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .7rem;
+  color: var(--campus-fog-strong);
 }
 
 .auth-form .input-group-text {
   border-color: var(--color-border-input);
   background: #fff;
   color: var(--campus-fog);
-  font-size: .9rem;
+  font-size: .85rem;
   border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  padding: 12px 16px;
+  padding: 11px 14px;
 }
 
 .auth-form .form-control {
   border-color: var(--color-border-input);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-family: var(--font-body);
-  font-size: .95rem;
-  padding: 12px 16px;
+  font-size: .9rem;
+  padding: 11px 14px;
   background: #fff;
   transition: border-color var(--transition-fast) var(--ease),
               box-shadow var(--transition-fast) var(--ease),
@@ -258,7 +505,7 @@ body {
 /* Visible keyboard focus — clear campus-green ring */
 .auth-form .form-control:focus {
   border-color: var(--campus-green);
-  box-shadow: 0 0 0 4px rgba(26, 77, 58, .14);
+  box-shadow: 0 0 0 3px rgba(26, 77, 58, .10);
   background: #fff;
 }
 
@@ -267,65 +514,172 @@ body {
   font-weight: 400;
 }
 
+/* ── Password visibility toggle ──
+   With the eye button as the last child of the field, the input's right
+   corners square off and the toggle carries the outer rounding. */
+.auth-form .input-group-password .form-control {
+  border-radius: 0;
+}
+
+.auth-form .auth-password-toggle {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 0 12px;
+  cursor: pointer;
+  color: var(--campus-fog);
+  transition: color var(--transition-fast) var(--ease),
+              background var(--transition-fast) var(--ease);
+}
+
+.auth-form .auth-password-toggle:hover,
+.auth-form .auth-password-toggle:focus-visible {
+  color: var(--campus-green);
+}
+
+.auth-form .auth-password-toggle i {
+  font-size: .95rem;
+  line-height: 1;
+  pointer-events: none;
+  transition: transform 160ms var(--ease),
+              opacity 160ms var(--ease);
+}
+
+/* Brief flip on the eye icon when toggled — a tactile "flick" so the
+   swap reads as a physical action rather than an instant replace. */
+.auth-form .auth-password-toggle.is-switching i {
+  transform: rotate(-20deg) scale(.8);
+  opacity: .4;
+}
+
+.auth-form .auth-password-toggle:active {
+  transform: scale(.92);
+  transition-duration: 80ms;
+}
+
+/* ── Forgot password link — small, right-aligned under the field ── */
+.auth-form .auth-forgot {
+  font-family: var(--font-body);
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast) var(--ease);
+}
+
+.auth-form .auth-forgot:hover {
+  color: var(--campus-green);
+}
+
 /* ── Submit button — the single deliberate moment ──
-   The one fingerprint icon in the page lives here. Solid green,
-   confident; a restrained lift on hover is the only motion. */
+   Solid green, confident; scale-on-press for tactile feedback. */
 .auth-login-btn {
   width: 100%;
-  padding: 14px 24px;
-  margin-top: 6px;
+  padding: 13px 24px;
+  margin-top: 8px;
   font-family: var(--font-body);
-  font-size: .98rem;
-  font-weight: 700;
+  font-size: .95rem;
+  font-weight: 600;
   letter-spacing: .01em;
   border-radius: var(--radius-sm);
   background: var(--campus-green);
   border: none;
   color: #fff;
-  box-shadow: 0 4px 14px rgba(26, 77, 58, .24);
-  transition: transform var(--transition-fast) var(--ease),
-              box-shadow var(--transition-fast) var(--ease),
-              background var(--transition-fast) var(--ease);
+  box-shadow: 0 2px 8px rgba(26, 77, 58, .18);
+  overflow: hidden;
+  position: relative;
+  transition: transform 160ms var(--ease),
+              box-shadow 160ms var(--ease),
+              background 160ms var(--ease);
 }
 
 .auth-login-btn .bi-fingerprint {
-  color: var(--campus-gold);
+  color: var(--campus-accent);
 }
 
-/* Gold fingerprint must survive btn-primary's white default */
+/* Accent fingerprint must survive btn-primary's white default */
 .btn-primary.auth-login-btn .bi-fingerprint {
-  color: var(--campus-gold);
+  color: var(--campus-accent);
 }
 
-.auth-login-btn:hover {
-  background: #21593f;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(26, 77, 58, .30);
+/* Sheen sweep — a soft light band glides across on hover, hinting at the
+   fingerprint scan action without being distracting. Transforms only. */
+.auth-login-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .18), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  transition: transform 500ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-login-btn:hover {
+    background: #1e5039;
+    box-shadow: 0 4px 16px rgba(26, 77, 58, .22);
+  }
+
+  .auth-login-btn:hover::after {
+    transform: skewX(-20deg) translateX(320%);
+  }
 }
 
 .auth-login-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(26, 77, 58, .22);
+  transform: scale(.97);
+  box-shadow: 0 1px 4px rgba(26, 77, 58, .16);
+  transition-duration: 100ms;
 }
 
 /* ========================================
-   Theme Toggle FAB
+   Theme Toggle FAB — subtle, glass-like
    ======================================== */
 .theme-toggle-fab {
   position: fixed;
   top: 1.25rem;
   right: 1.25rem;
   z-index: 1080;
+  background: rgba(255, 255, 255, .6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, .3);
+  transition: transform 160ms var(--ease),
+              background-color 160ms var(--ease),
+              border-color 160ms var(--ease),
+              box-shadow 160ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .theme-toggle-fab:hover {
+    background: rgba(255, 255, 255, .85);
+    border-color: rgba(255, 255, 255, .5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+  }
+}
+
+.theme-toggle-fab:active {
+  transform: scale(.92);
+  transition-duration: 80ms;
+}
+
+.theme-toggle-fab i {
+  transition: transform 180ms var(--ease);
+}
+
+.theme-toggle-fab:active i {
+  transform: rotate(-40deg);
 }
 
 /* ========================================
-   Motion — one deliberate sequence on the form panel.
+   Motion — one crisp entrance sequence.
    Disabled for reduced-motion users.
    ======================================== */
 @keyframes authFormFadeUp {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -335,13 +689,13 @@ body {
 
 .auth-form-panel > * {
   opacity: 0;
-  animation: authFormFadeUp .6s var(--ease) forwards;
+  animation: authFormFadeUp .4s var(--ease) forwards;
 }
 
-.auth-form-panel > *:nth-child(1) { animation-delay: .05s; }
-.auth-form-panel > *:nth-child(2) { animation-delay: .15s; }
-.auth-form-panel > *:nth-child(3) { animation-delay: .25s; }
-.auth-form-panel > *:nth-child(4) { animation-delay: .35s; }
+.auth-form-panel > *:nth-child(1) { animation-delay: .04s; }
+.auth-form-panel > *:nth-child(2) { animation-delay: .1s; }
+.auth-form-panel > *:nth-child(3) { animation-delay: .16s; }
+.auth-form-panel > *:nth-child(4) { animation-delay: .22s; }
 
 @media (prefers-reduced-motion: reduce) {
   .auth-form-panel > * {
@@ -350,8 +704,34 @@ body {
   }
 
   .auth-login-btn,
-  .auth-form .form-control {
+  .auth-form .form-control,
+  .auth-logo-badge,
+  .auth-hero-arrow,
+  .auth-hero-progress,
+  .auth-hero-detail,
+  .auth-password-toggle,
+  .theme-toggle-fab {
     transition: none;
+  }
+
+  .auth-hero-progress.active .auth-hero-progress-fill {
+    animation: none;
+    transform: scaleX(1);
+  }
+
+  .auth-hero-slide-content.active {
+    animation: none;
+  }
+
+  /* No lift/translate motion; keep simple color changes only. */
+  .auth-logo-badge:hover,
+  .auth-hero-arrow:hover,
+  .auth-hero-detail:hover {
+    transform: none;
+  }
+
+  .auth-login-btn::after {
+    display: none;
   }
 }
 
@@ -366,7 +746,7 @@ body {
 
   .auth-form-panel {
     flex: 0 0 420px;
-    padding: 44px 40px;
+    padding: 48px 48px;
   }
 }
 
@@ -377,17 +757,17 @@ body {
 
   .auth-form-panel {
     flex: 1 1 100%;
-    padding: 44px 32px;
+    padding: 44px 36px;
   }
 }
 
 @media (max-width: 480px) {
   .auth-form-panel {
-    padding: 36px 22px;
+    padding: 36px 24px;
   }
 
   .auth-form-header h2 {
-    font-size: 1.45rem;
+    font-size: 1.4rem;
   }
 }
 
@@ -425,6 +805,65 @@ body {
 
 .toast-success .btn-close {
   filter: invert(30%) sepia(80%) saturate(600%) hue-rotate(120deg) brightness(80%) contrast(90%);
+}
+
+/* ========================================
+   Kiosk quick-link — login page → event kiosk
+   ======================================== */
+.auth-kiosk-divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: 1.5rem 0 .9rem;
+  color: var(--campus-fog);
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.auth-kiosk-divider::before,
+.auth-kiosk-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(154, 168, 160, .28);
+}
+
+.auth-kiosk-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  width: 100%;
+  padding: .9rem 1.1rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  font-size: .95rem;
+  text-decoration: none;
+  transition: transform var(--transition-fast) var(--ease), box-shadow var(--transition-normal) var(--ease), border-color var(--transition-normal) var(--ease);
+}
+
+.auth-kiosk-link:hover {
+  color: var(--brand-700);
+  border-color: var(--brand-400);
+  box-shadow: var(--shadow-focus);
+}
+
+.auth-kiosk-link:active {
+  transform: scale(.97);
+}
+
+.auth-kiosk-link i {
+  font-size: 1.25rem;
+  color: var(--brand-600);
+}
+
+.auth-kiosk-link strong {
+  font-weight: 700;
+  color: var(--brand-700);
 }
 
 /* NOTE: All dark-theme styles (auth pages included) have been

@@ -9,6 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="../css/styles.css" rel="stylesheet">
+  <link href="../css/dark-style.css" rel="stylesheet">
   <style>
     /* ── Sanction summary stats ── */
     .sanction-stats {
@@ -53,33 +54,27 @@
     }
 
     /* ── Severity policy tooltip ── */
-    .severity-policy-wrap {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      margin-left: 8px;
-    }
     .severity-policy-trigger {
       display: inline-grid;
       place-items: center;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border: 1px solid var(--color-border-default);
       border-radius: var(--radius-circle);
       background: var(--color-bg-card);
       color: var(--color-text-muted);
-      font-size: .6rem;
+      font-size: .65rem;
       cursor: pointer;
       transition: border-color var(--transition-fast), color var(--transition-fast);
+      flex-shrink: 0;
+      margin-top: 2px;
     }
     .severity-policy-trigger:hover {
       border-color: var(--bs-primary);
       color: var(--bs-primary);
     }
     .severity-policy-dropdown {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
+      position: fixed;
       width: 300px;
       padding: 16px;
       border: 1px solid var(--color-border-default);
@@ -231,7 +226,6 @@
         <a class="active" href="student-sanctions.html"><i class="bi bi-shield-exclamation"></i> Sanctions</a>
       </nav>
       <div class="student-sidebar-footer">
-        <button class="sidebar-action" type="button"><i class="bi bi-gear"></i> Settings</button>
         <button class="sidebar-action logout-action" type="button" onclick="logout()"><i class="bi bi-box-arrow-left"></i> Log out</button>
       </div>
     </aside>
@@ -249,27 +243,28 @@
       <section class="subpage-intro">
         <div>
           <p class="section-kicker">Sanctions & appeals</p>
-          <h1>My sanctions</h1>
+          <h1 style="display:flex;align-items:center;gap:10px;">My sanctions
+            <button class="severity-policy-trigger" type="button" id="severityPolicyBtn" aria-label="Severity policy info"><i class="bi bi-info"></i></button>
+          </h1>
           <p class="intro-copy">View your sanction history and appeal decisions you believe are incorrect.</p>
         </div>
-        <div class="severity-policy-wrap" id="severityPolicyWrap">
-          <button class="severity-policy-trigger" type="button" id="severityPolicyBtn" aria-label="Severity policy info"><i class="bi bi-info"></i></button>
-          <div class="severity-policy-dropdown" id="severityPolicyDropdown">
-            <h4><i class="bi bi-shield-exclamation" style="margin-right:4px;color:var(--color-badge-probation)"></i> Severity escalation policy</h4>
-            <p>Sanctions escalate based on the number and severity of infractions. Repeated offenses move to the next level automatically.</p>
-            <div class="severity-steps">
-              <div class="severity-step warning">Warning</div>
-              <span class="severity-arrow"><i class="bi bi-arrow-right"></i></span>
-              <div class="severity-step probation">Probation</div>
-              <span class="severity-arrow"><i class="bi bi-arrow-right"></i></span>
-              <div class="severity-step suspension">Suspension</div>
-            </div>
-            <p style="margin-top:10px"><strong style="color:var(--color-text-heading)">Warning:</strong> First-time or minor infractions. A formal notice.</p>
-            <p><strong style="color:var(--color-text-heading)">Probation:</strong> Repeated warnings or moderate violations. Restrictions may apply.</p>
-            <p style="margin-bottom:0"><strong style="color:var(--color-text-heading)">Suspension:</strong> Severe or repeated probation-level offenses. Temporary removal from events.</p>
-          </div>
-        </div>
       </section>
+
+      <!-- Popover rendered outside flow so it never inherits ancestor transforms -->
+      <div class="severity-policy-dropdown" id="severityPolicyDropdown">
+        <h4><i class="bi bi-shield-exclamation" style="margin-right:4px;color:var(--color-badge-probation)"></i> Severity escalation policy</h4>
+        <p>Sanctions escalate based on the number and severity of infractions. Repeated offenses move to the next level automatically.</p>
+        <div class="severity-steps">
+          <div class="severity-step warning">Warning</div>
+          <span class="severity-arrow"><i class="bi bi-arrow-right"></i></span>
+          <div class="severity-step probation">Probation</div>
+          <span class="severity-arrow"><i class="bi bi-arrow-right"></i></span>
+          <div class="severity-step suspension">Suspension</div>
+        </div>
+        <p style="margin-top:10px"><strong style="color:var(--color-text-heading)">Warning:</strong> First-time or minor infractions. A formal notice.</p>
+        <p><strong style="color:var(--color-text-heading)">Probation:</strong> Repeated warnings or moderate violations. Restrictions may apply.</p>
+        <p style="margin-bottom:0"><strong style="color:var(--color-text-heading)">Suspension:</strong> Severe or repeated probation-level offenses. Temporary removal from events.</p>
+      </div>
 
       <!-- Summary stats -->
       <div class="sanction-stats" id="sanctionStats"></div>
@@ -323,11 +318,41 @@
       if (policyBtn && policyDropdown) {
         policyBtn.addEventListener('click', function (e) {
           e.stopPropagation();
-          policyDropdown.classList.toggle('open');
+          var isOpen = policyDropdown.classList.toggle('open');
+          if (isOpen) {
+            /* Position the dropdown below the button using fixed coords
+               so ancestor transforms/padding can't shift it. */
+            var rect = policyBtn.getBoundingClientRect();
+            var ddWidth = 300;
+            var gap = 8;
+            /* Default: left-aligned below the button */
+            var left = rect.left;
+            /* If it would overflow the right edge of the viewport, shift left */
+            if (left + ddWidth > window.innerWidth - 16) {
+              left = window.innerWidth - ddWidth - 16;
+            }
+            /* If it would overflow the left edge, clamp to 16px */
+            if (left < 16) left = 16;
+            policyDropdown.style.left = left + 'px';
+            policyDropdown.style.top = (rect.bottom + gap) + 'px';
+          }
         });
         document.addEventListener('click', function () {
           policyDropdown.classList.remove('open');
         });
+        /* Reposition on scroll/resize while open */
+        window.addEventListener('scroll', function () {
+          if (policyDropdown.classList.contains('open')) {
+            var rect = policyBtn.getBoundingClientRect();
+            var ddWidth = 300;
+            var gap = 8;
+            var left = rect.left;
+            if (left + ddWidth > window.innerWidth - 16) left = window.innerWidth - ddWidth - 16;
+            if (left < 16) left = 16;
+            policyDropdown.style.left = left + 'px';
+            policyDropdown.style.top = (rect.bottom + gap) + 'px';
+          }
+        }, { passive: true });
       }
 
       /* ── Load sanctions with enhanced features ── */

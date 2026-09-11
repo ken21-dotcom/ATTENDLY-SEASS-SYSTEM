@@ -34,6 +34,10 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         const users = getUsers();
+        if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+          showToast('error', 'A user with this email already exists.');
+          return;
+        }
         const newUser = { id: generateId('stu'), name, email, password: 'password123', role: 'student' };
         users.push(newUser);
         setUsers(users);
@@ -58,6 +62,10 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         const users = getUsers();
+        if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+          showToast('error', 'A user with this email already exists.');
+          return;
+        }
         const newUser = { id: generateId('off'), name, email, password: 'password123', role: 'ssc-officer' };
         users.push(newUser);
         setUsers(users);
@@ -97,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
           description,
           severity,
           status: 'active',
-          date: new Date().toISOString().slice(0,10),
+          date: todayStr(),
           officerId: getCurrentUser() ? getCurrentUser().id : null,
           notes: notes || null
         };
@@ -163,7 +171,7 @@ function loadBiometricRegistry() {
   const select = document.getElementById('biometricStudent');
   const students = getUsers().filter(user => user.role === 'student');
   select.innerHTML = students.length
-    ? students.map(student => `<option value="${student.id}">${student.name} (${student.id})</option>`).join('')
+    ? students.map(student => `<option value="${student.id}">${escapeHtml(student.name)} (${escapeHtml(student.id)})</option>`).join('')
     : '<option value="">No students available</option>';
   renderBiometricTable();
 }
@@ -174,7 +182,7 @@ function renderBiometricTable() {
   const biometrics = getBiometrics();
   tbody.innerHTML = users.filter(user => user.role === 'student').map(student => {
     const record = biometrics.find(item => item.studentId === student.id);
-    return `<tr><td>${student.name}</td><td>${student.id}</td><td>${record ? formatDate(record.registeredAt) : '<span class="text-muted">Not registered</span>'}</td><td>${record ? '<span class="badge bg-success">Registered</span>' : '<span class="badge bg-secondary">Pending</span>'}</td></tr>`;
+    return `<tr><td>${escapeHtml(student.name)}</td><td>${escapeHtml(student.id)}</td><td>${record ? formatDate(record.registeredAt) : '<span class="text-muted">Not registered</span>'}</td><td>${record ? '<span class="badge bg-success">Registered</span>' : '<span class="badge bg-secondary">Pending</span>'}</td></tr>`;
   }).join('');
 }
 
@@ -194,7 +202,7 @@ function registerBiometric(event) {
   window.setTimeout(function() {
     const quality = document.getElementById('templateQuality').value;
     const registrationStatus = quality === 'poor' ? 'needs-reenrollment' : 'enrolled';
-    const registeredAt = new Date().toISOString().slice(0, 10);
+    const registeredAt = todayStr();
     const biometrics = getBiometrics().filter(record => record.studentId !== studentId);
     biometrics.push({ studentId, templateId: generateId('template'), registeredAt, status: registrationStatus, quality, consentCaptured: true, identityVerified: true });
     setBiometrics(biometrics);
@@ -210,7 +218,7 @@ function registerBiometric(event) {
 
 function loadDashboardStats() {
   const students = getUsers().filter(u => u.role === 'student');
-  const today = new Date().toISOString().slice(0,10);
+  const today = todayStr();
   const events = getEvents();
   const eventsToday = events.filter(e => e.date === today).length;
   const attendance = getAttendance();
@@ -232,11 +240,11 @@ function loadStudentsTable() {
   students.forEach(student => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${student.id}</td>
-      <td>${student.name}</td>
-      <td>${student.email}</td>
+      <td>${escapeHtml(student.id)}</td>
+      <td>${escapeHtml(student.name)}</td>
+      <td>${escapeHtml(student.email)}</td>
       <td>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${student.id}')">Delete</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${escapeHtml(student.id)}')">Delete</button>
       </td>
     `;
     tbody.appendChild(row);
@@ -251,11 +259,11 @@ function loadOfficersTable() {
   officers.forEach(officer => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${officer.id}</td>
-      <td>${officer.name}</td>
-      <td>${officer.email}</td>
+      <td>${escapeHtml(officer.id)}</td>
+      <td>${escapeHtml(officer.name)}</td>
+      <td>${escapeHtml(officer.email)}</td>
       <td>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${officer.id}')">Delete</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${escapeHtml(officer.id)}')">Delete</button>
       </td>
     `;
     tbody.appendChild(row);
@@ -271,6 +279,20 @@ function deleteUser(userId) {
   setAttendance(attendance);
   let sanctions = getSanctions().filter(s => s.studentId !== userId);
   setSanctions(sanctions);
+  // Clean up biometric records and audit trail
+  let biometrics = getBiometrics().filter(b => b.studentId !== userId);
+  setBiometrics(biometrics);
+  let biometricAudit = getBiometricAudit().filter(a => a.studentId !== userId && a.adminId !== userId);
+  setBiometricAudit(biometricAudit);
+  // Clean up appeals tied to this student or their sanctions
+  let appeals = getAppeals().filter(a => a.studentId !== userId);
+  setAppeals(appeals);
+  // Clean up reenrollment requests
+  let reenrollment = getReenrollmentRequests().filter(r => r.studentId !== userId);
+  setReenrollmentRequests(reenrollment);
+  // Clean up flagged-student entries
+  let flagged = getFlaggedStudents().filter(f => f.studentId !== userId);
+  setFlaggedStudents(flagged);
   showToast('success', 'User deleted.');
   // Reload current table
   if (document.getElementById('studentTableBody')) loadStudentsTable();
@@ -288,21 +310,21 @@ function loadEventsTable() {
     const recurring = event.recurring;
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${event.id}</td>
-      <td>${event.name}</td>
+      <td>${escapeHtml(event.id)}</td>
+      <td>${escapeHtml(event.name)}</td>
       <td>${formatDate(event.date)}</td>
-      <td>${event.time}</td>
-      <td>${event.location}</td>
+      <td>${escapeHtml(event.time)}</td>
+      <td>${escapeHtml(event.location)}</td>
       <td>
         <div class="event-badges">
-          <span class="event-type-badge ${type}"><i class="bi bi-${type === 'major' ? 'star' : '-circle'}"></i> ${type}</span>
+          <span class="event-type-badge ${type}"><i class="bi bi-${type === 'major' ? 'star' : 'circle'}"></i> ${type}</span>
           <span class="mandatory-badge ${mandatory ? 'yes' : 'no'}"><i class="bi bi-${mandatory ? 'exclamation-circle' : 'info-circle'}"></i> ${mandatory ? 'Mandatory' : 'Optional'}</span>
-          ${recurring ? '<span class="recurring-badge"><i class="bi bi-arrow-repeat"></i> Every ' + recurring.day + '</span>' : ''}
+          ${recurring ? '<span class="recurring-badge"><i class="bi bi-arrow-repeat"></i> Every ' + escapeHtml(recurring.day) + '</span>' : ''}
         </div>
       </td>
       <td>
-        <button class="btn btn-sm btn-outline-secondary me-1" onclick="editEvent('${event.id}')">Edit</button>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteEvent('${event.id}')">Delete</button>
+        <button class="btn btn-sm btn-outline-secondary me-1" onclick="editEvent('${escapeHtml(event.id)}')">Edit</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteEvent('${escapeHtml(event.id)}')">Delete</button>
       </td>
     `;
     tbody.appendChild(row);
@@ -414,19 +436,21 @@ function loadSanctionsTable() {
   const sanctions = getSanctions();
   const tbody = document.getElementById('sanctionTableBody');
   if (!tbody) return;
+  // Build user lookup map once to avoid O(n*m) inside the loop
+  const userMap = new Map(getUsers().map(u => [u.id, u]));
   tbody.innerHTML = '';
   sanctions.forEach(sanction => {
-    const student = getUsers().find(u => u.id === sanction.studentId);
+    const student = userMap.get(sanction.studentId);
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${sanction.id}</td>
-      <td>${student ? student.name : 'Unknown'}</td>
-      <td>${sanction.description}</td>
+      <td>${escapeHtml(sanction.id)}</td>
+      <td>${student ? escapeHtml(student.name) : 'Unknown'}</td>
+      <td>${escapeHtml(sanction.description)}</td>
       <td>${severityBadge(sanction.severity)}</td>
       <td><span class="badge bg-${sanction.status === 'active' ? 'danger' : 'secondary'}">${sanction.status}</span></td>
       <td>
-        <button class="btn btn-sm btn-outline-secondary" onclick="toggleSanctionStatus('${sanction.id}')">Toggle Status</button>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteSanction('${sanction.id}')">Delete</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="toggleSanctionStatus('${escapeHtml(sanction.id)}')">Toggle Status</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteSanction('${escapeHtml(sanction.id)}')">Delete</button>
       </td>
     `;
     tbody.appendChild(row);
@@ -471,14 +495,15 @@ function generateAttendanceReport() {
   const attendance = getAttendance().filter(a => !eventId || a.eventId === eventId);
   const tbody = document.getElementById('attendanceReportBody');
   if (!tbody) return;
+  const userMap = new Map(getUsers().map(u => [u.id, u]));
   tbody.innerHTML = '';
   attendance.forEach(record => {
-    const student = getUsers().find(u => u.id === record.studentId);
+    const student = userMap.get(record.studentId);
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${student ? student.name : 'Unknown'}</td>
+      <td>${student ? escapeHtml(student.name) : 'Unknown'}</td>
       <td>${formatDate(record.date)}</td>
-      <td>${record.time}</td>
+      <td>${record.time ?? '—'}</td>
       <td><span class="badge bg-${record.status === 'present' ? 'success' : record.status === 'late' ? 'warning text-dark' : 'danger'}">${record.status}</span></td>
     `;
     tbody.appendChild(row);
@@ -490,13 +515,14 @@ function generateSanctionReport() {
   const sanctions = getSanctions().filter(s => statusFilter === 'all' || s.status === statusFilter);
   const tbody = document.getElementById('sanctionReportBody');
   if (!tbody) return;
+  const userMap = new Map(getUsers().map(u => [u.id, u]));
   tbody.innerHTML = '';
   sanctions.forEach(sanction => {
-    const student = getUsers().find(u => u.id === sanction.studentId);
+    const student = userMap.get(sanction.studentId);
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${student ? student.name : 'Unknown'}</td>
-      <td>${sanction.description}</td>
+      <td>${student ? escapeHtml(student.name) : 'Unknown'}</td>
+      <td>${escapeHtml(sanction.description)}</td>
       <td>${severityBadge(sanction.severity)}</td>
       <td><span class="badge bg-${sanction.status === 'active' ? 'danger' : 'secondary'}">${sanction.status}</span></td>
     `;
@@ -507,11 +533,11 @@ function generateSanctionReport() {
 function loadBiometricAudit() {
   const tbody = document.getElementById('biometricAuditBody');
   const audits = getBiometricAudit();
-  const users = getUsers();
+  const userMap = new Map(getUsers().map(u => [u.id, u]));
   tbody.innerHTML = audits.map(audit => {
-    const student = users.find(user => user.id === audit.studentId);
-    const admin = users.find(user => user.id === audit.adminId);
-    return `<tr><td>${formatDate(audit.date)}</td><td>${audit.action}</td><td>${student ? student.name : audit.studentId}</td><td>${admin ? admin.name : audit.adminId}</td><td>${audit.device}</td><td>${audit.quality}</td><td>${audit.result}</td></tr>`;
+    const student = userMap.get(audit.studentId);
+    const admin = userMap.get(audit.adminId);
+    return `<tr><td>${formatDate(audit.date)}</td><td>${escapeHtml(audit.action)}</td><td>${student ? escapeHtml(student.name) : escapeHtml(audit.studentId)}</td><td>${admin ? escapeHtml(admin.name) : escapeHtml(audit.adminId)}</td><td>${escapeHtml(audit.device)}</td><td>${escapeHtml(audit.quality)}</td><td>${escapeHtml(audit.result)}</td></tr>`;
   }).join('');
   toggleEmptyState('auditEmpty', audits.length > 0);
 }

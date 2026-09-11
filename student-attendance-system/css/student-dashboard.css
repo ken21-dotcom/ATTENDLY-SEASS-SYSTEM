@@ -15,6 +15,14 @@
   color: var(--color-text-primary);
 }
 
+/* Mobile: fixed background attachment is expensive on mobile GPUs */
+@media (max-width: 768px) {
+  .student-dashboard-page,
+  .student-subpage-page {
+    background-attachment: scroll;
+  }
+}
+
 /* --- Student Shell (Sidebar + Main) --- */
 .student-shell {
   display: flex;
@@ -34,6 +42,8 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  z-index: 25;
+  overflow: hidden;
 }
 
 .student-brand {
@@ -42,8 +52,8 @@
   gap: 10px;
   padding: 0 13px 28px;
   color: #fff;
-  font-size: 1.08rem;
-  font-weight: 800;
+  font-size: 1.05rem;
+  font-weight: 700;
   letter-spacing: .02em;
   text-decoration: none;
 }
@@ -51,6 +61,14 @@
 .student-brand i {
   color: var(--brand-300);
   font-size: 1.4rem;
+  transition: transform 180ms var(--ease), color 180ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .student-brand:hover i {
+    color: var(--brand-100);
+    transform: rotate(-12deg) scale(1.1);
+  }
 }
 
 .student-profile {
@@ -61,10 +79,18 @@
   padding: 18px 10px 24px;
   color: inherit;
   text-decoration: none;
-  transition: background var(--transition-fast) var(--ease);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast) var(--ease),
+              transform var(--transition-fast) var(--ease);
 }
 
-.student-profile:hover { color: inherit; }
+@media (hover: hover) and (pointer: fine) {
+  .student-profile:hover {
+    background: var(--color-bg-sidebar-hover);
+    transform: translateX(3px);
+  }
+  .student-profile:hover { color: inherit; }
+}
 
 .profile-avatar {
   display: grid;
@@ -77,6 +103,14 @@
   font-size: .74rem;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(14,159,110,.35);
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .student-profile:hover .profile-avatar {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(14,159,110,.45);
+  }
 }
 
 .student-profile strong {
@@ -117,7 +151,10 @@
   font-size: .82rem;
   text-decoration: none;
   text-align: left;
-  transition: all var(--transition-fast) var(--ease);
+  transition: background-color var(--transition-fast) var(--ease),
+              color var(--transition-fast) var(--ease),
+              transform var(--transition-fast) var(--ease),
+              box-shadow var(--transition-fast) var(--ease);
   font-weight: 500;
 }
 
@@ -126,14 +163,36 @@
   width: 17px;
   text-align: center;
   font-size: .95rem;
+  transition: transform var(--transition-fast) var(--ease);
 }
 
-.student-nav a:hover { background: var(--color-bg-sidebar-hover); color: #fff; }
+@media (hover: hover) and (pointer: fine) {
+  .student-nav a:hover,
+  .sidebar-action:hover {
+    background: var(--color-bg-sidebar-hover);
+    color: #fff;
+  }
+}
 
 .student-nav a.active {
   background: linear-gradient(135deg, var(--brand-600), var(--brand-500));
   color: #fff;
   box-shadow: 0 4px 14px rgba(14,159,110,.35);
+  position: relative;
+}
+
+/* Active nav indicator — a small green tick on the left edge that
+   cements the selected state without extra decoration. */
+.student-nav a.active::before {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  width: 3px;
+  height: 60%;
+  border-radius: var(--radius-pill);
+  background: var(--brand-400);
+  transform: translateY(-50%);
 }
 
 .student-sidebar-footer {
@@ -144,10 +203,23 @@
   padding-top: 18px;
 }
 
-.sidebar-action:hover { background: var(--color-bg-sidebar-hover); color: #fff; }
-
 .logout-action { color: rgba(255,255,255,.66); }
-.logout-action:hover { color: #ffd7d7 !important; background: rgba(220,53,69,.14) !important; }
+
+/* Keyboard focus — crisp green ring on the sidebar controls */
+.student-nav a:focus-visible,
+.sidebar-action:focus-visible {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .logout-action:hover {
+    color: #ffd7d7 !important;
+    background: rgba(220,53,69,.14) !important;
+  }
+
+  .sidebar-action:hover { background: var(--color-bg-sidebar-hover); color: #fff; }
+}
 
 /* --- Student Main Content --- */
 .student-main {
@@ -167,9 +239,6 @@
   position: sticky;
   top: 0;
   background: var(--color-bg-app);
-  background: color-mix(in srgb, var(--color-bg-app) 82%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   z-index: 20;
 }
 
@@ -181,7 +250,19 @@
   gap: 14px;
 }
 
-.topbar-date { color: var(--color-text-muted); }
+.topbar-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  border: 1px solid var(--color-border-default);
+}
 
 .icon-button {
   display: inline-grid;
@@ -192,14 +273,57 @@
   border-radius: var(--radius-circle);
   background: var(--color-bg-card);
   color: var(--color-text-muted);
-  transition: all var(--transition-fast) var(--ease);
+  cursor: pointer;
+  transition: transform 160ms var(--ease),
+              background-color 160ms var(--ease),
+              color 160ms var(--ease),
+              border-color 160ms var(--ease),
+              box-shadow 160ms var(--ease);
 }
 
-.icon-button:hover {
-  border-color: var(--bs-primary);
-  color: var(--brand-600);
-  background: var(--brand-50);
-  box-shadow: var(--shadow-xs);
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:hover {
+    border-color: var(--bs-primary);
+    color: var(--brand-600);
+    background: var(--brand-50);
+    box-shadow: var(--shadow-xs);
+  }
+}
+
+.icon-button:active {
+  transform: scale(.92);
+  transition-duration: 80ms;
+}
+
+/* Keyboard focus — visible green ring, matching styles.css focus */
+.icon-button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* Theme toggle — same tactile "flick" as the login page: the
+   moon/sun icon does a quick counter-rotation on press. Scoped to
+   [data-theme-toggle] so other .icon-button uses (notifications,
+   calendar controls) stay plain. */
+.icon-button[data-theme-toggle] i {
+  transition: transform 180ms var(--ease);
+}
+
+.icon-button[data-theme-toggle]:active {
+  transform: scale(.92);
+  transition-duration: 80ms;
+}
+
+.icon-button[data-theme-toggle]:active i {
+  transform: rotate(-40deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-button[data-theme-toggle],
+  .icon-button[data-theme-toggle] i {
+    transition: none;
+    transform: none;
+  }
 }
 
 /* --- Dashboard Intro --- */
@@ -209,6 +333,29 @@
   justify-content: space-between;
   gap: 20px;
   padding: 42px 0 28px;
+}
+
+/* Gentle page entrance — sections rise in sequence. Occasional (load),
+   so a little delight is earned; disabled for reduced-motion. */
+.student-main > section,
+.student-main > .dashboard-intro {
+  animation: sectionRise .45s var(--ease) both;
+}
+
+.student-main > section:nth-of-type(1) { animation-delay: .05s; }
+.student-main > section:nth-of-type(2) { animation-delay: .12s; }
+.student-main > section:nth-of-type(3) { animation-delay: .19s; }
+
+@keyframes sectionRise {
+  from { opacity: 0; transform: translateY(14px); filter: blur(1px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-main > section,
+  .student-main > .dashboard-intro {
+    animation: none;
+  }
 }
 
 .section-kicker {
@@ -224,7 +371,7 @@
   margin: 0;
   color: var(--color-text-heading);
   font-size: clamp(1.8rem, 3.2vw, 2.7rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -.02em;
   line-height: 1.15;
 }
@@ -260,13 +407,17 @@
   border-radius: var(--radius-lg);
   background: var(--color-bg-card);
   box-shadow: var(--shadow-card);
-  transition: box-shadow var(--transition-normal) var(--ease), transform var(--transition-normal) var(--ease), border-color var(--transition-normal) var(--ease);
+  transition: box-shadow var(--transition-normal) var(--ease),
+              transform var(--transition-normal) var(--ease),
+              border-color var(--transition-normal) var(--ease);
+  position: relative;
 }
 
-.dashboard-card:hover {
-  box-shadow: var(--shadow-card-hover);
-  transform: translateY(-2px);
-  border-color: #d9e6df;
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
 }
 
 .stat-card {
@@ -276,7 +427,21 @@
 
 .stat-card-featured {
   border-color: #c9ead9;
-  background: linear-gradient(135deg, #fff 0%, var(--brand-50) 100%);
+  background: linear-gradient(135deg, #fff 0%, var(--brand-50) 60%, #d8f5e8 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card-featured::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -15%;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-circle);
+  background: radial-gradient(circle, rgba(14,159,110,.08) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .stat-heading,
@@ -299,7 +464,8 @@
   font-size: 2rem;
   font-weight: 800;
   line-height: 1;
-  letter-spacing: -.02em;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-card small {
@@ -314,20 +480,7 @@
   margin-top: 18px;
 }
 
-/* Enrollment Status Card */
-.enrollment-status-card {
-  border-color: #f2c8cc;
-  background: linear-gradient(135deg, #fff 0%, #fdf2f2 100%);
-}
-
-.enrollment-status-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
+/* Enrollment pill — status badges for biometric enrollment state */
 .enrollment-pill {
   display: inline-flex;
   align-items: center;
@@ -361,60 +514,39 @@
   50% { box-shadow: 0 0 0 6px rgba(220, 53, 69, .1); }
 }
 
-.enrollment-detail {
-  flex: 1;
-  min-width: 150px;
-  color: var(--color-text-muted);
-  font-size: .72rem;
-}
-
-.enrollment-status-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-
-.enrollment-status-row .btn {
-  font-size: .7rem;
-  padding: 5px 12px;
-  margin-left: auto;
-}
-
-/* Re-enrollment Request Card */
-.reenrollment-request-card {
-  border-color: #f3d9a0;
-  background: linear-gradient(135deg, #fff 0%, #fffbf0 100%);
-}
-
-.reenrollment-request-card .stat-heading { color: var(--color-text-muted); }
-
-.reenrollment-content {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-}
-
-.reenrollment-hint {
-  color: var(--color-text-warning);
-  font-size: .7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
-
-.reenrollment-request-card .btn { font-size: .75rem; padding: 8px 16px; }
-
 /* Progress Track */
 .progress-track {
   height: 6px;
   overflow: hidden;
   border-radius: var(--radius-pill);
   background: #eef2ef;
+  margin: 4px 0;
 }
 
 .progress-track span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
-  transition: width .6s var(--ease);
+  background: linear-gradient(90deg, var(--brand-400), var(--brand-600));
+  transition: width .8s var(--ease-in-out);
+  position: relative;
+}
+
+.progress-track span::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.3) 50%, transparent 100%);
+  animation: progressShimmer 2s ease-in-out infinite;
+}
+
+@keyframes progressShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-track span::after { animation: none; }
 }
 
 /* --- Dashboard Columns --- */
@@ -435,9 +567,10 @@
 .card-heading h2 {
   margin: 0;
   color: var(--color-text-heading);
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 750;
   letter-spacing: -.01em;
+  line-height: 1.3;
 }
 
 /* Attendance Donut Chart */
@@ -446,6 +579,15 @@
   align-items: center;
   gap: 34px;
   min-height: 190px;
+}
+
+/* Register the donut's fill as an animatable custom property so the
+   ring eases up from 0% on load. Browsers without @property support
+   simply snap to the final value — a safe enhancement. */
+@property --present-rate {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
 }
 
 .donut-chart {
@@ -457,6 +599,8 @@
   border-radius: var(--radius-circle);
   background: conic-gradient(var(--bs-primary) var(--present-rate, 0%), #eceff0 0);
   position: relative;
+  transition: --present-rate 1.1s var(--ease-in-out);
+  box-shadow: 0 2px 12px rgba(14,159,110,.12);
 }
 
 .donut-chart::before {
@@ -524,11 +668,21 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 0;
+  padding: 12px 8px;
   border-bottom: 1px solid var(--color-border-table);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast) var(--ease),
+              transform var(--transition-fast) var(--ease);
 }
 
 .announcement-item:last-child { border-bottom: 0; }
+
+@media (hover: hover) and (pointer: fine) {
+  .announcement-item:hover {
+    background: var(--brand-50);
+    transform: translateX(3px);
+  }
+}
 
 .announcement-icon {
   display: grid;
@@ -582,27 +736,46 @@
 .mini-calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  gap: 4px;
   text-align: center;
 }
 
 .calendar-weekdays {
-  margin: 24px 0 8px;
+  margin: 20px 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-default);
   color: var(--color-text-muted);
-  font-size: .65rem;
-  font-weight: 600;
+  font-size: .62rem;
+  font-weight: 650;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .06em;
 }
 
 .calendar-cell {
   display: grid;
-  min-height: 30px;
+  min-height: 34px;
   place-items: center;
   border-radius: 8px;
   color: var(--color-text-primary);
   font-size: .74rem;
-  transition: background var(--transition-fast) var(--ease), color var(--transition-fast) var(--ease);
+  font-weight: 500;
+  cursor: default;
+  position: relative;
+  transition: background var(--transition-fast) var(--ease),
+              color var(--transition-fast) var(--ease),
+              transform var(--transition-fast) var(--ease),
+              box-shadow var(--transition-fast) var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .calendar-cell:not(.today):not(.has-event):hover {
+    background: var(--color-bg-input);
+    transform: translateY(-1px);
+  }
+  .calendar-cell.has-event:hover {
+    box-shadow: 0 2px 8px rgba(14, 159, 110, .18);
+    transform: translateY(-1px);
+  }
 }
 
 .calendar-cell.has-event {
@@ -616,12 +789,19 @@
   outline-offset: -2px;
   color: var(--brand-700);
   font-weight: 700;
+  background: rgba(14,159,110,.06);
+}
+
+.calendar-cell.empty {
+  cursor: default;
 }
 
 .calendar-key {
   display: flex;
   gap: 16px;
-  margin-top: 20px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-default);
   color: var(--color-text-muted);
   font-size: .66rem;
 }
@@ -646,21 +826,40 @@
 }
 
 /* Weather */
-.weather-symbol { color: #f0b23d; font-size: 1.8rem; }
+.weather-symbol {
+  color: #f0b23d;
+  font-size: 2rem;
+  display: inline-block;
+  filter: drop-shadow(0 2px 6px rgba(240,178,61,.35));
+  animation: weatherFloat 4s ease-in-out infinite;
+}
+
+@keyframes weatherFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weather-symbol { animation: none; }
+}
 
 .weather-main {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin: 30px 0 24px;
+  margin: 24px 0 20px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(240,178,61,.06) 0%, rgba(100,169,215,.06) 100%);
 }
 
 .weather-main strong {
   color: var(--color-text-heading);
-  font-size: 3.4rem;
+  font-size: 3rem;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 .weather-main span {
@@ -692,14 +891,20 @@
 
 .weather-location i { color: var(--bs-primary); margin-right: 4px; }
 
+.weather-feels-like { color: var(--color-text-muted) !important; }
+.weather-symbol i { color: inherit; }
+
 /* --- Subpage Styles --- */
-.subpage-intro { padding: 44px 0 30px; }
+.subpage-intro {
+  padding: 44px 0 30px;
+  animation: sectionRise .45s var(--ease) both;
+}
 
 .subpage-intro h1 {
   margin: 0;
   color: var(--color-text-heading);
   font-size: clamp(1.9rem, 3.2vw, 2.7rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -.02em;
 }
 
@@ -866,6 +1071,87 @@
   gap: 16px;
 }
 
+/* Student ID Card */
+.student-id-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.student-id-inner {
+  padding: 26px;
+}
+
+.student-id-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.student-id-avatar {
+  flex: 0 0 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-circle);
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+  color: #fff;
+  font-size: 1.6rem;
+  box-shadow: 0 4px 14px rgba(14, 159, 110, .3);
+}
+
+.student-id-name {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 750;
+  color: var(--color-text-heading);
+  letter-spacing: -.01em;
+}
+
+.student-id-subtitle {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: .76rem;
+}
+
+.student-id-divider {
+  height: 1px;
+  background: var(--color-border-default);
+  margin: 4px 0 16px;
+}
+
+.student-id-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+
+.id-field label {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--color-text-muted);
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.id-field span {
+  display: block;
+  color: var(--color-text-primary);
+  font-size: .82rem;
+  font-weight: 500;
+}
+
+.id-field .id-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: .86rem;
+  letter-spacing: .02em;
+  color: var(--brand-600);
+}
+
 .profile-card,
 .profile-biometric-card { padding: 26px; }
 
@@ -903,16 +1189,30 @@
   border-color: var(--brand-100);
 }
 
+.profile-biometric-card .guide-icon {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.profile-biometric-card .section-kicker {
+  margin-bottom: 6px;
+}
+
 .profile-biometric-card h2 {
-  margin: 10px 0 14px;
+  margin: 6px 0 16px;
   font-size: 1.05rem;
   font-weight: 750;
 }
 
+.profile-biometric-card .enrollment-pill {
+  margin-bottom: 14px;
+}
+
 .profile-note {
-  margin: 18px 0;
+  margin: 16px 0;
   color: var(--color-text-muted);
   font-size: .78rem;
+  line-height: 1.5;
 }
 
 /* Student Biometric Styles */
@@ -1098,6 +1398,7 @@
 
 @media (max-width: 700px) {
   .profile-layout { grid-template-columns: 1fr; }
+  .student-id-body { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 650px) {

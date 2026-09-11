@@ -30,9 +30,7 @@
    ──────────────────────────────────────────────── */
 [data-theme="dark"] {
   --color-bg-app: #0b1210;
-  --color-bg-app-grad: radial-gradient(1200px 600px at 85% -10%, #0f2419 0%, rgba(15,36,25,0) 55%),
-                       radial-gradient(1000px 500px at -10% 110%, #122b1c 0%, rgba(18,43,28,0) 50%),
-                       #0b1210;
+  --color-bg-app-grad: #0b1210;
   --color-bg-card: #131d18;
   --color-bg-sidebar: #080f0c;
   --color-bg-sidebar-hover: rgba(14, 159, 110, .18);
@@ -61,11 +59,11 @@
   --color-badge-probation: #ee9442;
   --color-badge-suspension: #ec5864;
 
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.3);
-  --shadow-card: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.30);
-  --shadow-card-hover: 0 2px 4px rgba(0,0,0,.35), 0 20px 44px rgba(0,0,0,.42);
-  --shadow-focus: 0 0 0 4px rgba(20, 180, 134, .25);
-  --shadow-pop: 0 14px 36px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.25);
+  --shadow-card: 0 1px 3px rgba(0,0,0,.25);
+  --shadow-card-hover: 0 2px 6px rgba(0,0,0,.3);
+  --shadow-focus: 0 0 0 3px rgba(20, 180, 134, .2);
+  --shadow-pop: 0 8px 24px rgba(0,0,0,.35);
 
   /* Bootstrap design tokens — re-theme baseline components so utilities,
      input groups, tabs, alerts, dropdowns etc. follow the theme too. */
@@ -112,19 +110,20 @@
 [data-theme="dark"] .kiosk-result {
   background: var(--color-bg-card);
   border-color: var(--color-border-default);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .dashboard-card:hover,
+[data-theme="dark"] .role-action-card:hover,
+[data-theme="dark"] .admin-stat-card:hover,
+[data-theme="dark"] .kiosk-card:hover,
+[data-theme="dark"] .kiosk-result:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
 }
 
 [data-theme="dark"] .stat-card-featured {
   background: linear-gradient(135deg, #131d18 0%, #0f2419 100%);
-  border-color: #173728;
-}
-
-[data-theme="dark"] .enrollment-status-card {
-  background: linear-gradient(135deg, #131d18 0%, #2a1416 100%);
-}
-
-[data-theme="dark"] .reenrollment-request-card {
-  background: linear-gradient(135deg, #131d18 0%, #2a250f 100%);
+  border-color: #1a3326;
 }
 
 [data-theme="dark"] .stat-value,
@@ -165,6 +164,13 @@
 
 [data-theme="dark"] .table { color: var(--color-text-primary); }
 
+/* Table row hover — light --brand-50 would clash on dark; use theme surface */
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] .student-table tbody tr:hover {
+    background: var(--color-bg-input);
+  }
+}
+
 [data-theme="dark"] .card { background: var(--color-bg-card); }
 
 [data-theme="dark"] .progress-track { background: #22322a; }
@@ -177,6 +183,12 @@
 
 [data-theme="dark"] .calendar-cell { color: #b7c6bd; }
 
+/* Calendar key — dark mode */
+[data-theme="dark"] .calendar-key {
+  border-top-color: var(--color-border-default);
+  color: var(--color-text-muted);
+}
+
 [data-theme="dark"] .reader-instruction,
 [data-theme="dark"] .biometric-guide,
 [data-theme="dark"] .appeal-guide,
@@ -185,8 +197,9 @@
   border-color: var(--color-border-default);
 }
 
-[data-theme="dark"] .weather-main strong,
-[data-theme="dark"] .weather-main span { color: #e2ece6; }
+[data-theme="dark"] .weather-main strong { color: #e2ece6; }
+[data-theme="dark"] .weather-main > div > span { color: var(--color-text-muted); }
+[data-theme="dark"] .weather-feels-like { color: var(--color-text-muted) !important; }
 
 [data-theme="dark"] .student-profile small,
 [data-theme="dark"] .role-profile small { color: #8fa399; }
@@ -228,6 +241,28 @@
   color: var(--color-text-muted);
 }
 
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] .icon-button:hover {
+    background: var(--color-bg-input);
+    border-color: var(--brand-400);
+    color: var(--color-text-success-light);
+    box-shadow: var(--shadow-xs);
+  }
+}
+
+[data-theme="dark"] .theme-toggle-fab {
+  background: rgba(19, 29, 24, .7);
+  border-color: rgba(255, 255, 255, .08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] .theme-toggle-fab:hover {
+    background: rgba(30, 46, 38, .9);
+    border-color: rgba(255, 255, 255, .18);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+  }
+}
+
 [data-theme="dark"] .appeal-guide ol,
 [data-theme="dark"] .profile-note,
 [data-theme="dark"] .biometric-guide p { color: #8fa399; }
@@ -237,6 +272,33 @@
 [data-theme="dark"] .calendar-cell.has-event {
   background: #0f2419;
   color: #4fce9f;
+}
+
+/* Student ID card — dark mode */
+[data-theme="dark"] .student-id-card {
+  background: var(--color-bg-success-light);
+  border-color: var(--color-border-default);
+}
+
+[data-theme="dark"] .student-id-avatar {
+  background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+  color: #fff;
+}
+
+[data-theme="dark"] .student-id-divider {
+  background: var(--color-border-default);
+}
+
+[data-theme="dark"] .student-id-name {
+  color: var(--color-text-heading);
+}
+
+[data-theme="dark"] .id-field label {
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .id-field span {
+  color: var(--color-text-primary);
 }
 
 [data-theme="dark"] .btn-close { filter: invert(1); }
@@ -310,14 +372,22 @@
   color: var(--color-text-muted);
 }
 
-/* Borders & topbar */
+/* Borders & topbar — solid opaque topbar with no visible seam */
 [data-theme="dark"] .student-topbar,
 [data-theme="dark"] .role-topbar {
-  border-bottom-color: var(--color-border-default);
+  border-bottom-color: transparent;
+  background: var(--color-bg-app);
   color: var(--color-text-muted);
 }
 
 [data-theme="dark"] .announcement-item { border-bottom-color: var(--color-border-default); }
+
+/* Announcement hover — darker surface for dark theme (light --brand-50 would clash) */
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] .announcement-item:hover {
+    background: var(--color-bg-input);
+  }
+}
 
 [data-theme="dark"] .appeal-help,
 [data-theme="dark"] .appeal-submitted p { color: var(--color-text-muted); }
@@ -395,7 +465,7 @@
   --bs-primary: #1a4d3a;
   --bs-primary-rgb: 26, 77, 58;
   --color-border-focus: var(--campus-green);
-  --shadow-focus: 0 0 0 4px rgba(26, 77, 58, .16);
+  --shadow-focus: 0 0 0 3px rgba(26, 77, 58, .12);
 }
 
 :root:not([data-theme="light"]) .auth-form-panel,
@@ -427,8 +497,8 @@
 :root:not([data-theme="light"]) .auth-form .form-control:focus,
 :root[data-theme="dark"] .auth-form .form-control:focus {
   background: #18251f;
-  border-color: var(--campus-gold);
-  box-shadow: 0 0 0 4px rgba(200, 169, 78, .16);
+  border-color: var(--campus-green);
+  box-shadow: 0 0 0 3px rgba(26, 77, 58, .12);
 }
 
 /* Invalid feedback — ensure red is visible on dark form surface.
@@ -457,20 +527,133 @@
 /* Login button — brighter green for visibility on dark, gold accent */
 [data-theme="dark"] .auth-login-btn {
   background: #21593f;
-  box-shadow: 0 6px 18px rgba(26, 77, 58, .4);
+  box-shadow: 0 2px 8px rgba(26, 77, 58, .3);
 }
 
 [data-theme="dark"] .auth-login-btn:hover {
   background: #2a6b4c;
+  box-shadow: 0 4px 16px rgba(26, 77, 58, .35);
 }
 
-/* Dark hero overlay — deepen near-black with a green cast */
+[data-theme="dark"] .auth-login-btn:active {
+  transform: scale(.97);
+  box-shadow: 0 1px 4px rgba(26, 77, 58, .2);
+}
+
+/* Password toggle — square inner edge is already handled in auth.css;
+   on dark the green hover turns gold to match the focus-visible ring. */
+:root:not([data-theme="light"]) .auth-form .auth-password-toggle:hover,
+:root:not([data-theme="light"]) .auth-form .auth-password-toggle:focus-visible {
+  color: var(--campus-gold);
+}
+
+/* Forgot password link — gold hover on dark surfaces */
+:root:not([data-theme="light"]) .auth-form .auth-forgot:hover {
+  color: var(--campus-gold);
+}
+
+/* Dark hero overlay — deep black-green, two-stop */
 [data-theme="dark"] .auth-hero::after {
   background:
     linear-gradient(180deg,
-      rgba(6, 16, 12, .28) 0%,
-      rgba(8, 22, 16, .5) 40%,
-      rgba(8, 24, 18, .82) 72%,
-      rgba(5, 14, 10, .97) 100%
+      rgba(5, 12, 8, .18) 0%,
+      rgba(5, 14, 10, .92) 100%
     );
+}
+
+/* BIOMETRICS badge — dark mode */
+:root:not([data-theme="light"]) .auth-badge-biometrics,
+:root[data-theme="dark"] .auth-badge-biometrics {
+  background: var(--campus-green);
+  color: #fff;
+}
+
+/* Uppercase labels — dark mode */
+:root:not([data-theme="light"]) .auth-form .auth-label-uppercase,
+:root[data-theme="dark"] .auth-form .auth-label-uppercase {
+  color: #9fb0a6;
+}
+
+/* ========================================
+   Kiosk page — dark mode
+   ======================================== */
+:root:not([data-theme="light"]) .kiosk-topbar,
+:root[data-theme="dark"] .kiosk-topbar {
+  background: rgba(13, 26, 21, .86);
+  border-bottom-color: var(--color-border-sidebar);
+}
+
+:root:not([data-theme="light"]) .kiosk-event-select,
+:root[data-theme="dark"] .kiosk-event-select {
+  background-color: #152620;
+  border-color: var(--color-border-input);
+  color: var(--color-text-primary);
+}
+
+:root:not([data-theme="light"]) .kiosk-scan,
+:root[data-theme="dark"] .kiosk-scan {
+  background: var(--color-bg-card);
+}
+
+:root:not([data-theme="light"]) .kiosk-manual,
+:root[data-theme="dark"] .kiosk-manual {
+  background: var(--color-bg-card);
+}
+
+:root:not([data-theme="light"]) .kiosk-manual-toggle:hover,
+:root[data-theme="dark"] .kiosk-manual-toggle:hover {
+  background: #152620;
+}
+
+:root:not([data-theme="light"]) .kiosk-count,
+:root[data-theme="dark"] .kiosk-count {
+  background: #152620;
+  border-color: var(--color-border-input);
+}
+
+:root:not([data-theme="light"]) .kiosk-manual-input,
+:root[data-theme="dark"] .kiosk-manual-input {
+  background: #152620;
+  border-color: var(--color-border-input);
+  color: var(--color-text-primary);
+}
+
+:root:not([data-theme="light"]) .kiosk-result-overlay,
+:root[data-theme="dark"] .kiosk-result-overlay {
+  background: rgba(3, 8, 6, .62);
+}
+
+/* ========================================
+   Landing page — dark mode
+   ======================================== */
+:root:not([data-theme="light"]) .landing-card,
+:root[data-theme="dark"] .landing-card {
+  background: var(--color-bg-card);
+}
+
+:root:not([data-theme="light"]) .landing-cta--login,
+:root[data-theme="dark"] .landing-cta--login {
+  background: #152620;
+  border-color: var(--color-border-input);
+  color: var(--color-text-primary);
+}
+
+:root:not([data-theme="light"]) .landing-cta--login:hover,
+:root[data-theme="dark"] .landing-cta--login:hover {
+  background: #1b2f27;
+}
+
+:root:not([data-theme="light"]) .landing-page .theme-toggle-fab,
+:root[data-theme="dark"] .landing-page .theme-toggle-fab {
+  background: rgba(19, 29, 24, .7);
+  border-color: rgba(255, 255, 255, .08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root:not([data-theme="light"]) .landing-page .theme-toggle-fab:hover,
+  :root[data-theme="dark"] .landing-page .theme-toggle-fab:hover {
+    background: rgba(30, 46, 38, .9);
+    border-color: rgba(255, 255, 255, .18);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+  }
 }

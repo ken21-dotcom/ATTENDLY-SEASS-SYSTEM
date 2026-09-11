@@ -42,8 +42,43 @@ document.addEventListener('DOMContentLoaded', function() {
     loadEnrollmentStatus(user.id);
   }
 
-  if (document.getElementById('profileForm')) {
-    loadStudentProfile(user);
+  // Password change form handler
+  if (document.getElementById('passwordForm')) {
+    const passwordForm = document.getElementById('passwordForm');
+    passwordForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showToast('error', 'Please fill all fields.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showToast('error', 'New passwords do not match.');
+        return;
+      }
+      if (newPassword.length < 6) {
+        showToast('error', 'New password must be at least 6 characters.');
+        return;
+      }
+      const users = getUsers();
+      const userIndex = users.findIndex(u => u.id === user.id);
+      if (userIndex === -1) {
+        showToast('error', 'User not found.');
+        return;
+      }
+      if (users[userIndex].password !== currentPassword) {
+        showToast('error', 'Current password is incorrect.');
+        return;
+      }
+      users[userIndex].password = newPassword;
+      setUsers(users);
+      setSession({ ...user, password: newPassword });
+      passwordForm.reset();
+      document.getElementById('passwordSaved').classList.remove('d-none');
+      showToast('success', 'Password updated successfully.');
+    });
   }
 });
 
@@ -86,6 +121,111 @@ function loadStudentDashboard(user) {
 
   renderAnnouncements();
   renderMiniCalendar(dashboardCalendarDate, events);
+  loadWeather();
+}
+
+/* ── Weather (Open-Meteo) ─────────────────────────────────────── */
+
+var weatherRefreshTimer = null;
+
+/**
+ * WMO Weather interpretation codes → description + Bootstrap icon.
+ * Reference: https://open-meteo.com/en/docs#weathervariables
+ */
+var WMO_CODES = {
+  0:  { desc: 'Clear sky',          icon: 'bi-sun' },
+  1:  { desc: 'Mainly clear',       icon: 'bi-sun' },
+  2:  { desc: 'Partly cloudy',      icon: 'bi-cloud-sun' },
+  3:  { desc: 'Overcast',           icon: 'bi-cloud' },
+  45: { desc: 'Fog',                icon: 'bi-cloud-fog' },
+  48: { desc: 'Depositing rime fog',icon: 'bi-cloud-fog' },
+  51: { desc: 'Light drizzle',      icon: 'bi-cloud-drizzle' },
+  53: { desc: 'Moderate drizzle',   icon: 'bi-cloud-drizzle' },
+  55: { desc: 'Dense drizzle',      icon: 'bi-cloud-drizzle' },
+  56: { desc: 'Freezing drizzle',   icon: 'bi-cloud-drizzle' },
+  57: { desc: 'Dense freezing drizzle', icon: 'bi-cloud-drizzle' },
+  61: { desc: 'Slight rain',        icon: 'bi-cloud-rain' },
+  63: { desc: 'Moderate rain',      icon: 'bi-cloud-rain' },
+  65: { desc: 'Heavy rain',         icon: 'bi-cloud-rain-heavy' },
+  66: { desc: 'Freezing rain',      icon: 'bi-cloud-rain' },
+  67: { desc: 'Heavy freezing rain',icon: 'bi-cloud-rain-heavy' },
+  71: { desc: 'Slight snow',        icon: 'bi-snow' },
+  73: { desc: 'Moderate snow',      icon: 'bi-snow' },
+  75: { desc: 'Heavy snow',         icon: 'bi-snow' },
+  77: { desc: 'Snow grains',        icon: 'bi-snow' },
+  80: { desc: 'Rain showers',       icon: 'bi-cloud-rain' },
+  81: { desc: 'Moderate rain showers', icon: 'bi-cloud-rain-heavy' },
+  82: { desc: 'Violent rain showers',  icon: 'bi-cloud-rain-heavy' },
+  85: { desc: 'Snow showers',       icon: 'bi-snow' },
+  86: { desc: 'Heavy snow showers', icon: 'bi-snow' },
+  95: { desc: 'Thunderstorm',       icon: 'bi-cloud-lightning' },
+  96: { desc: 'Thunderstorm with hail', icon: 'bi-cloud-lightning' },
+  99: { desc: 'Thunderstorm with heavy hail', icon: 'bi-cloud-lightning' },
+};
+
+function wmoLookup(code) {
+  return WMO_CODES[code] || { desc: 'Unknown', icon: 'bi-question-circle' };
+}
+
+function loadWeather() {
+  // Clear any existing auto-refresh timer to avoid stacking
+  if (weatherRefreshTimer) { clearInterval(weatherRefreshTimer); weatherRefreshTimer = null; }
+
+  var LAT  = 7.8213;
+  var LON  = 123.4285;
+  var API  = 'https://api.open-meteo.com/v1/forecast'
+           + '?latitude=' + LAT
+           + '&longitude=' + LON
+           + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code'
+           + '&hourly=precipitation_probability'
+           + '&timezone=Asia/Manila'
+           + '&forecast_days=1';
+
+  var tempEl      = document.getElementById('weatherTemp');
+  var condEl      = document.getElementById('weatherCondition');
+  var feelsEl     = document.getElementById('weatherFeelsLike');
+  var humEl       = document.getElementById('weatherHumidity');
+  var rainEl      = document.getElementById('weatherRain');
+  var iconWrap    = document.getElementById('weatherIcon');
+  var updatedEl   = document.getElementById('weatherUpdated');
+
+  fetch(API, { signal: AbortSignal.timeout(10000) })
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function (data) {
+      var cur  = data.current;
+      var hour = new Date().getHours();
+      var rainProb = data.hourly && data.hourly.precipitation_probability
+        ? data.hourly.precipitation_probability[hour]
+        : null;
+
+      var info = wmoLookup(cur.weather_code);
+
+      tempEl.textContent    = Math.round(cur.temperature_2m) + '°';
+      condEl.textContent    = info.desc;
+      feelsEl.textContent   = 'Feels like ' + Math.round(cur.apparent_temperature) + '°';
+      humEl.textContent     = cur.relative_humidity_2m + '%';
+      rainEl.textContent    = rainProb !== null ? rainProb + '%' : '—';
+      iconWrap.innerHTML    = '<i class="bi ' + info.icon + '"></i>';
+
+      var now = new Date();
+      updatedEl.textContent = 'Updated '
+        + now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+      // Auto-refresh every 15 minutes
+      weatherRefreshTimer = setInterval(loadWeather, 15 * 60 * 1000);
+    })
+    .catch(function () {
+      tempEl.textContent  = '--°';
+      condEl.textContent  = 'Weather data unavailable';
+      feelsEl.textContent = '';
+      humEl.textContent   = '--%';
+      rainEl.textContent  = '--%';
+      iconWrap.innerHTML  = '<i class="bi bi-cloud-slash"></i>';
+      if (updatedEl) updatedEl.textContent = '';
+    });
 }
 
 function loadEnrollmentStatus(studentId) {
@@ -100,7 +240,7 @@ function loadEnrollmentStatus(studentId) {
   const labels = { enrolled: 'Enrolled', 'needs-reenrollment': 'Needs re-enrollment', 'not-enrolled': 'Not enrolled' };
   statusElement.textContent = labels[status] || 'Not enrolled';
   statusElement.className = `enrollment-pill ${status}`;
-  detailElement.textContent = record ? `Last updated ${formatDate(record.registeredAt)} · Template quality: ${record.quality || 'standard'}` : 'Your fingerprint can only be registered or changed by an ATTENDLY administrator.';
+  detailElement.textContent = 'Your fingerprint can only be registered or changed by an ATTENDLY administrator.';
 
   const setButtonState = function(disabled, text) {
     if (requestButton) {
@@ -120,8 +260,10 @@ function loadEnrollmentStatus(studentId) {
   // Remove any existing event listeners by cloning the button
   const newButton = requestButton.cloneNode(true);
   requestButton.parentNode.replaceChild(newButton, requestButton);
+  // FIX: reassign so later code targets the live button, not the detached clone
+  requestButton = newButton;
 
-  newButton.addEventListener('click', function() {
+  requestButton.addEventListener('click', function() {
     const modalEl = document.getElementById('reenrollmentModal');
     if (modalEl) {
       const modal = new bootstrap.Modal(modalEl);
@@ -142,7 +284,7 @@ function loadEnrollmentStatus(studentId) {
         return;
       }
       const updatedRequests = getReenrollmentRequests();
-      updatedRequests.push({ id: generateId('reenroll'), studentId, reason, status: 'pending', date: new Date().toISOString().slice(0, 10) });
+      updatedRequests.push({ id: generateId('reenroll'), studentId, reason, status: 'pending', date: todayStr() });
       setReenrollmentRequests(updatedRequests);
       if (requestButton) {
         requestButton.disabled = true;
@@ -153,65 +295,6 @@ function loadEnrollmentStatus(studentId) {
       document.getElementById('reenrollmentForm').reset();
       bootstrap.Modal.getInstance(document.getElementById('reenrollmentModal')).hide();
       showToast('success', 'Re-enrollment request sent to the admin.');
-    });
-  }
-}
-
-function loadStudentProfile(user) {
-  const nameInput = document.getElementById('profileName');
-  const emailInput = document.getElementById('profileEmail');
-  const idInput = document.getElementById('profileId');
-  nameInput.value = user.name;
-  emailInput.value = user.email;
-  idInput.value = user.id;
-  document.getElementById('profileForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    const name = nameInput.value.trim();
-    if (!name) return;
-    const users = getUsers().map(item => item.id === user.id ? { ...item, name } : item);
-    setUsers(users);
-    setSession({ ...user, name });
-    document.querySelectorAll('#studentName').forEach(element => { element.textContent = name; });
-    document.getElementById('profileSaved').classList.remove('d-none');
-    showToast('success', 'Profile updated successfully.');
-  });
-
-  // Password change form handler
-  const passwordForm = document.getElementById('passwordForm');
-  if (passwordForm) {
-    passwordForm.addEventListener('submit', function(event) {
-      event.preventDefault();
-      const currentPassword = document.getElementById('currentPassword').value;
-      const newPassword = document.getElementById('newPassword').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        showToast('error', 'Please fill all fields.');
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        showToast('error', 'New passwords do not match.');
-        return;
-      }
-      if (newPassword.length < 6) {
-        showToast('error', 'New password must be at least 6 characters.');
-        return;
-      }
-      const users = getUsers();
-      const userIndex = users.findIndex(u => u.id === user.id);
-      if (userIndex === -1) {
-        showToast('error', 'User not found.');
-        return;
-      }
-      if (users[userIndex].password !== currentPassword) {
-        showToast('error', 'Current password is incorrect.');
-        return;
-      }
-      users[userIndex].password = newPassword;
-      setUsers(users);
-      setSession({ ...user, password: newPassword });
-      passwordForm.reset();
-      document.getElementById('passwordSaved').classList.remove('d-none');
-      showToast('success', 'Password updated successfully.');
     });
   }
 }
@@ -260,7 +343,7 @@ function loadStudentAttendance(studentId) {
     row.innerHTML = `
       <td>${formatDate(record.date)}</td>
       <td>${event.name}</td>
-      <td>${record.time}</td>
+      <td>${record.time ?? '—'}</td>
       <td><span class="badge ${record.status === 'present' ? 'bg-success' : record.status === 'late' ? 'bg-warning text-dark' : 'bg-danger'}">${record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span></td>
     `;
     tbody.appendChild(row);
@@ -315,7 +398,7 @@ function loadAppealForm(studentId) {
       return;
     }
     const updatedAppeals = getAppeals().filter(appeal => !(appeal.studentId === studentId && appeal.sanctionId === sanctionId && appeal.status === 'pending'));
-    updatedAppeals.push({ id: generateId('appeal'), studentId, sanctionId, reason, status: 'pending', date: new Date().toISOString().slice(0, 10) });
+    updatedAppeals.push({ id: generateId('appeal'), studentId, sanctionId, reason, status: 'pending', date: todayStr() });
     setAppeals(updatedAppeals);
     document.getElementById('appealForm').reset();
     document.getElementById('appealForm').classList.add('d-none');
