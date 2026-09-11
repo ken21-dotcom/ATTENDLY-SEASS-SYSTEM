@@ -23,6 +23,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Notifications: bell button + "View all announcements"
+  updateNotificationBadge();
+  const notificationBtn = document.getElementById('notificationBtn');
+  if (notificationBtn) notificationBtn.addEventListener('click', openNotifications);
+  const viewAllBtn = document.getElementById('viewAllAnnouncements');
+  if (viewAllBtn) viewAllBtn.addEventListener('click', openNotifications);
+  const closeBtn = document.querySelector('.notification-panel .notification-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeNotifications);
+  const backdrop = document.getElementById('notificationBackdrop');
+  if (backdrop) backdrop.addEventListener('click', closeNotifications);
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') closeNotifications();
+  });
+
   // On attendance page: load attendance records
   if (document.getElementById('attendanceTableBody')) {
     loadStudentAttendance(user.id);
@@ -299,14 +313,74 @@ function loadEnrollmentStatus(studentId) {
   }
 }
 
-function renderAnnouncements() {
-  const container = document.getElementById('announcementList');
-  const announcements = getAnnouncements();
-  container.innerHTML = announcements.slice(0, 3).map(announcement => `
+function announcementItemHTML(announcement) {
+  return `
     <div class="announcement-item">
       <span class="announcement-icon ${announcement.type === 'event' ? 'event-icon' : ''}"><i class="bi bi-${announcement.type === 'event' ? 'calendar-event' : 'megaphone'}"></i></span>
       <div><strong>${announcement.title}</strong><small>${announcement.detail}</small></div>
-    </div>`).join('');
+    </div>`;
+}
+
+function renderAnnouncements() {
+  const container = document.getElementById('announcementList');
+  if (!container) return;
+  const announcements = getAnnouncements();
+  container.innerHTML = announcements.slice(0, 3).map(announcementItemHTML).join('');
+}
+
+/* ── Notifications panel ────────────────────────────────────── */
+
+const READ_KEY = 'attendly_read_announcements';
+
+function getReadAnnouncements() {
+  try { return JSON.parse(localStorage.getItem(READ_KEY)) || []; } catch (e) { return []; }
+}
+
+function unreadAnnouncementCount() {
+  const announcements = getAnnouncements();
+  const read = getReadAnnouncements();
+  return announcements.filter(a => !read.includes(a.id)).length;
+}
+
+function renderNotificationList() {
+  const list = document.getElementById('notificationList');
+  const announcements = getAnnouncements();
+  if (!announcements.length) {
+    list.innerHTML = '<p class="notification-empty">No announcements yet.</p>';
+    return;
+  }
+  list.innerHTML = announcements.map(announcementItemHTML).join('');
+}
+
+function openNotifications() {
+  const panel = document.getElementById('notificationPanel');
+  const backdrop = document.getElementById('notificationBackdrop');
+  if (!panel) return;
+  renderNotificationList();
+  panel.hidden = false;
+  if (backdrop) backdrop.hidden = false;
+  document.body.classList.add('notification-open');
+  // Mark current announcements as read and refresh the badge
+  const read = getReadAnnouncements();
+  const ids = getAnnouncements().map(a => a.id);
+  localStorage.setItem(READ_KEY, JSON.stringify(Array.from(new Set([...read, ...ids]))));
+  updateNotificationBadge();
+}
+
+function closeNotifications() {
+  const panel = document.getElementById('notificationPanel');
+  const backdrop = document.getElementById('notificationBackdrop');
+  if (panel) panel.hidden = true;
+  if (backdrop) backdrop.hidden = true;
+  document.body.classList.remove('notification-open');
+}
+
+function updateNotificationBadge() {
+  const badge = document.getElementById('notificationBadge');
+  if (!badge) return;
+  const count = unreadAnnouncementCount();
+  badge.textContent = count > 9 ? '9+' : count;
+  badge.classList.toggle('hidden', count === 0);
 }
 
 function renderMiniCalendar(monthDate, events) {
@@ -344,7 +418,7 @@ function loadStudentAttendance(studentId) {
       <td>${formatDate(record.date)}</td>
       <td>${event.name}</td>
       <td>${record.time ?? '—'}</td>
-      <td><span class="badge ${record.status === 'present' ? 'bg-success' : record.status === 'late' ? 'bg-warning text-dark' : 'bg-danger'}">${record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span></td>
+      <td><span class="status-badge ${record.status}">${record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span></td>
     `;
     tbody.appendChild(row);
   });

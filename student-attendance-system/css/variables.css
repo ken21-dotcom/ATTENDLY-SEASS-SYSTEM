@@ -15,33 +15,35 @@
   --brand-500: #20b486;
   --brand-400: #4fce9f;
   --brand-300: #8ae0c0;
+  --brand-200: #b8e8d4;
   --brand-100: #e3f7ee;
   --brand-50: #f0fbf6;
 
   /* ── Semantic Surfaces ── */
-  --color-bg-app: #f5f7f6;
+  --color-bg-app: #f8faf9;
   --color-bg-app-grad: radial-gradient(1200px 600px at 85% -10%, #eafaf3 0%, rgba(234,250,243,0) 55%),
                       radial-gradient(1000px 500px at -10% 110%, #eefbf3 0%, rgba(238,251,243,0) 50%),
-                      #f5f7f6;
+                      #f8faf9;
   --color-bg-card: #ffffff;
+  --color-bg-card-elevated: #ffffff;
   --color-bg-sidebar: #0d221b;
-  --color-bg-sidebar-hover: rgba(14, 159, 110, .16);
+  --color-bg-sidebar-hover: rgba(14, 159, 110, .12);
   --color-bg-input: #f4f8f6;
   --color-bg-success-light: #e7f8f0;
   --color-bg-warning-light: #fff6e0;
   --color-bg-danger-light: #fdecec;
 
   /* ── Border Colors ── */
-  --color-border-default: #e6ece8;
-  --color-border-input: #dce5df;
+  --color-border-default: #e2ebe5;
+  --color-border-input: #d4e0d8;
   --color-border-sidebar: rgba(255,255,255,.08);
-  --color-border-table: #eef1ef;
+  --color-border-table: #e8f0eb;
   --color-border-focus: #0e9f6e;
 
   /* ── Text Colors ── */
-  --color-text-primary: #1c2b24;
-  --color-text-heading: #14221b;
-  --color-text-muted: #7c8b83;
+  --color-text-primary: #1a2921;
+  --color-text-heading: #0f1f17;
+  --color-text-muted: #6b7d73;
   --color-text-sidebar: rgba(226,240,233,.72);
   --color-text-sidebar-active: #ffffff;
   --color-text-success: #0b7f58;
@@ -58,15 +60,17 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* ── Spacing ── */
+  /* ── Spacing — 4px base grid ── */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
   --space-xxl: 40px;
+  --space-3xl: 56px;
 
   /* ── Border Radius ── */
+  --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 18px;
@@ -76,21 +80,25 @@
 
   /* ── Shadows — layered depth system ── */
   --shadow-xs: 0 1px 2px rgba(20, 34, 27, .04);
-  --shadow-card: 0 1px 3px rgba(20,34,27,.05), 0 1px 2px rgba(20,34,27,.03);
-  --shadow-card-hover: 0 4px 16px rgba(20,34,27,.10), 0 2px 4px rgba(20,34,27,.04);
-  --shadow-focus: 0 0 0 3px rgba(14, 159, 110, .14);
-  --shadow-pop: 0 8px 28px rgba(20,34,27,.12), 0 2px 6px rgba(20,34,27,.04);
+  --shadow-sm: 0 1px 3px rgba(20,34,27,.06), 0 1px 2px rgba(20,34,27,.03);
+  --shadow-card: 0 2px 8px rgba(20,34,27,.05), 0 1px 2px rgba(20,34,27,.03);
+  --shadow-card-hover: 0 8px 24px rgba(20,34,27,.10), 0 4px 8px rgba(20,34,27,.04);
+  --shadow-focus: 0 0 0 3px rgba(14, 159, 110, .18);
+  --shadow-pop: 0 12px 32px rgba(20,34,27,.14), 0 4px 8px rgba(20,34,27,.04);
+  --shadow-inset: inset 0 1px 2px rgba(20,34,27,.06);
 
   /* ── Transitions — crisp, intentional ── */
   --ease: cubic-bezier(.23, 1, .32, 1);
   --ease-in-out: cubic-bezier(.77, 0, .175, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
   --transition-fast: .14s;
-  --transition-normal: .2s;
+  --transition-normal: .22s;
+  --transition-slow: .35s;
 
   /* ── Layout ── */
   --sidebar-width: 244px;
-  --topbar-height: 76px;
-  --topbar-height-mobile: 62px;
+  --topbar-height: 72px;
+  --topbar-height-mobile: 58px;
 }
 
 /* ========================================

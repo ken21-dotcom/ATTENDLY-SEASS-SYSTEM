@@ -23,10 +23,15 @@
       align-items: center;
       gap: 14px;
       padding: 16px 18px;
-      border: 1px solid var(--color-border-default);
+      border: 1px solid #c9ead9;
       border-radius: var(--radius-lg);
-      background: var(--color-bg-card);
+      background: linear-gradient(135deg, #f0fbf6 0%, #e3f7ee 100%);
       box-shadow: var(--shadow-card);
+    }
+
+    [data-theme="dark"] .sanction-stat-card {
+      border-color: #2a3f33;
+      background: linear-gradient(135deg, #1a2920 0%, #1f3027 100%);
     }
     .sanction-stat-icon {
       flex: 0 0 40px;
@@ -125,7 +130,9 @@
 
     /* ── Expandable row ── */
     .sanction-row { cursor: pointer; }
-    .sanction-row:hover { background: var(--color-bg-success-light); }
+    .sanction-row:hover { background: rgba(14, 159, 110, 0.06); }
+
+    [data-theme="dark"] .sanction-row:hover { background: rgba(79, 206, 159, 0.04); }
     .sanction-expand-icon {
       transition: transform var(--transition-fast);
       font-size: .7rem;
@@ -143,9 +150,14 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       padding: 14px 16px;
-      border: 1px solid var(--color-border-default);
+      border: 1px solid #b8dcc5;
       border-radius: var(--radius-md);
-      background: var(--color-bg-input);
+      background: linear-gradient(135deg, #e8f5ee 0%, #d4edda 100%);
+    }
+
+    [data-theme="dark"] .sanction-detail-content {
+      border-color: #2a3f33;
+      background: linear-gradient(135deg, #1a2920 0%, #1f3027 100%);
     }
     .detail-field label {
       display: block;

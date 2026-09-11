@@ -29,26 +29,27 @@
    Overrides the light :root tokens when dark theme is active.
    ──────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --color-bg-app: #0b1210;
-  --color-bg-app-grad: #0b1210;
-  --color-bg-card: #131d18;
-  --color-bg-sidebar: #080f0c;
-  --color-bg-sidebar-hover: rgba(14, 159, 110, .18);
-  --color-bg-input: #18251f;
+  --color-bg-app: #0a1410;
+  --color-bg-app-grad: #0a1410;
+  --color-bg-card: #111c16;
+  --color-bg-card-elevated: #162219;
+  --color-bg-sidebar: #070e0a;
+  --color-bg-sidebar-hover: rgba(14, 159, 110, .15);
+  --color-bg-input: #152019;
   --color-bg-success-light: #0f2419;
   --color-bg-warning-light: #2a250f;
   --color-bg-danger-light: #2a1416;
 
-  --color-border-default: #1f3027;
-  --color-border-input: #22322a;
-  --color-border-sidebar: rgba(255,255,255,.06);
-  --color-border-table: #18251f;
+  --color-border-default: #1d2d24;
+  --color-border-input: #1f3027;
+  --color-border-sidebar: rgba(255,255,255,.05);
+  --color-border-table: #19261e;
   --color-border-focus: #20b486;
 
-  --color-text-primary: #e2ece6;
-  --color-text-heading: #f0f6f2;
-  --color-text-muted: #8fa399;
-  --color-text-sidebar: rgba(226,240,233,.64);
+  --color-text-primary: #d8e8df;
+  --color-text-heading: #ecf5f0;
+  --color-text-muted: #7f968a;
+  --color-text-sidebar: rgba(226,240,233,.6);
   --color-text-sidebar-active: #ffffff;
   --color-text-success: #4fce9f;
   --color-text-success-light: #5fd8ab;
@@ -59,26 +60,27 @@
   --color-badge-probation: #ee9442;
   --color-badge-suspension: #ec5864;
 
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.25);
-  --shadow-card: 0 1px 3px rgba(0,0,0,.25);
-  --shadow-card-hover: 0 2px 6px rgba(0,0,0,.3);
-  --shadow-focus: 0 0 0 3px rgba(20, 180, 134, .2);
-  --shadow-pop: 0 8px 24px rgba(0,0,0,.35);
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.15);
+  --shadow-card: 0 2px 8px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.15);
+  --shadow-card-hover: 0 4px 16px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.2);
+  --shadow-focus: 0 0 0 3px rgba(32, 180, 134, .25);
+  --shadow-pop: 0 8px 28px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.2);
 
   /* Bootstrap design tokens — re-theme baseline components so utilities,
      input groups, tabs, alerts, dropdowns etc. follow the theme too. */
-  --bs-body-bg: #0b1210;
-  --bs-body-color: #e2ece6;
-  --bs-secondary-color: #a5b6ad;
-  --bs-secondary-bg: #131d18;
-  --bs-tertiary-bg: #18251f;
-  --bs-emphasis-color: #f0f6f2;
-  --bs-border-color: #1f3027;
-  --bs-card-bg: #131d18;
-  --bs-card-color: #e2ece6;
-  --bs-heading-color: #f0f6f2;
+  --bs-body-bg: #0a1410;
+  --bs-body-color: #d8e8df;
+  --bs-secondary-color: #97ad9f;
+  --bs-secondary-bg: #111c16;
+  --bs-tertiary-bg: #152019;
+  --bs-emphasis-color: #ecf5f0;
+  --bs-border-color: #1d2d24;
+  --bs-card-bg: #111c16;
+  --bs-card-color: #d8e8df;
+  --bs-heading-color: #ecf5f0;
   --bs-link-color: #4fce9f;
-  --bs-link-hover-color: #5fd8ab;
+  --bs-link-hover-color: #6ae0b4;
   --bs-primary: #20b486;
   --bs-primary-rgb: 32, 180, 134;
   --bs-success-bg: #0f2419;
@@ -110,20 +112,29 @@
 [data-theme="dark"] .kiosk-result {
   background: var(--color-bg-card);
   border-color: var(--color-border-default);
-  box-shadow: none;
+  box-shadow: var(--shadow-card);
 }
 
-[data-theme="dark"] .dashboard-card:hover,
-[data-theme="dark"] .role-action-card:hover,
-[data-theme="dark"] .admin-stat-card:hover,
-[data-theme="dark"] .kiosk-card:hover,
-[data-theme="dark"] .kiosk-result:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+[data-theme="dark"] .dashboard-card::before {
+  opacity: 0;
+}
+
+[data-theme="dark"] .dashboard-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: #2a3f33;
+}
+
+[data-theme="dark"] .dashboard-card:hover::before {
+  opacity: 1;
 }
 
 [data-theme="dark"] .stat-card-featured {
-  background: linear-gradient(135deg, #131d18 0%, #0f2419 100%);
-  border-color: #1a3326;
+  background: linear-gradient(135deg, #111c16 0%, #0f2419 100%);
+  border-color: #1d3529;
+}
+
+[data-theme="dark"] .stat-card-featured::before {
+  background: radial-gradient(circle, rgba(79, 206, 159, .04) 0%, transparent 70%);
 }
 
 [data-theme="dark"] .stat-value,
@@ -171,14 +182,54 @@
   }
 }
 
+/* Status badges — dark mode */
+[data-theme="dark"] .status-badge.absent {
+  background: linear-gradient(135deg, #2a1416 0%, #2a1416 100%);
+  color: #ef8288;
+  border-color: #3d1f22;
+}
+
+[data-theme="dark"] .status-badge.present {
+  background: linear-gradient(135deg, #0f2419 0%, #152019 100%);
+  color: #5fd8ab;
+  border-color: #1d3529;
+}
+
+[data-theme="dark"] .status-badge.late {
+  background: linear-gradient(135deg, #2a250f 0%, #2a250f 100%);
+  color: #e5b53c;
+  border-color: #3d3a1f;
+}
+
+/* Records card — dark mode */
+[data-theme="dark"] .records-card {
+  background: linear-gradient(135deg, #111c16 0%, #152019 100%);
+  border-color: #1d3529;
+}
+
+[data-theme="dark"] .records-card::before {
+  background: linear-gradient(90deg, var(--brand-400), var(--brand-500), var(--brand-600));
+}
+
+[data-theme="dark"] .records-card .card-heading h2 {
+  color: var(--brand-400);
+}
+
 [data-theme="dark"] .card { background: var(--color-bg-card); }
 
-[data-theme="dark"] .progress-track { background: #22322a; }
+[data-theme="dark"] .progress-track {
+  background: linear-gradient(90deg, #1d2d24 0%, #19261e 100%);
+}
+
+[data-theme="dark"] .progress-track span {
+  box-shadow: 0 1px 4px rgba(32, 180, 134, .25);
+}
 
 [data-theme="dark"] .donut-chart::before { background: var(--color-bg-card); }
 
 [data-theme="dark"] .donut-chart {
-  background: conic-gradient(var(--bs-primary) var(--present-rate, 0%), #22322a 0);
+  background: conic-gradient(var(--bs-primary) var(--present-rate, 0%), #1d2d24 0);
+  box-shadow: 0 2px 12px rgba(32, 180, 134, .1);
 }
 
 [data-theme="dark"] .calendar-cell { color: #b7c6bd; }
@@ -193,8 +244,18 @@
 [data-theme="dark"] .biometric-guide,
 [data-theme="dark"] .appeal-guide,
 [data-theme="dark"] .profile-biometric-card {
-  background: var(--color-bg-success-light);
-  border-color: var(--color-border-default);
+  background: linear-gradient(160deg, #152019 0%, #111c16 100%);
+  border-color: #1d3529;
+}
+
+[data-theme="dark"] .reader-instruction {
+  background: linear-gradient(135deg, #152019 0%, #1d2d24 100%);
+  border-color: #1d3529;
+}
+
+[data-theme="dark"] .guide-icon {
+  color: var(--brand-400);
+  filter: drop-shadow(0 2px 8px rgba(79, 206, 159, .2));
 }
 
 [data-theme="dark"] .weather-main strong { color: #e2ece6; }
@@ -202,7 +263,18 @@
 [data-theme="dark"] .weather-feels-like { color: var(--color-text-muted) !important; }
 
 [data-theme="dark"] .student-profile small,
-[data-theme="dark"] .role-profile small { color: #8fa399; }
+[data-theme="dark"] .role-profile small { color: #7f968a; }
+
+[data-theme="dark"] .student-nav a.active {
+  background: linear-gradient(135deg, rgba(32, 180, 134, .2) 0%, rgba(32, 180, 134, .1) 100%);
+  color: #fff;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .student-nav a.active::before {
+  background: var(--brand-400);
+  box-shadow: 0 0 12px rgba(79, 206, 159, .4);
+}
 
 [data-theme="dark"] .toast {
   background: var(--color-bg-card) !important;
@@ -276,13 +348,18 @@
 
 /* Student ID card — dark mode */
 [data-theme="dark"] .student-id-card {
-  background: var(--color-bg-success-light);
-  border-color: var(--color-border-default);
+  background: linear-gradient(135deg, #111c16 0%, #152019 100%);
+  border-color: #1d3529;
+}
+
+[data-theme="dark"] .student-id-card::before {
+  background: linear-gradient(90deg, var(--brand-400), var(--brand-500), var(--brand-600));
 }
 
 [data-theme="dark"] .student-id-avatar {
-  background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
   color: #fff;
+  border-color: rgba(32, 180, 134, .3);
 }
 
 [data-theme="dark"] .student-id-divider {
@@ -313,18 +390,33 @@
 /* Status pills & appeal badges */
 [data-theme="dark"] .enrollment-pill.enrolled,
 [data-theme="dark"] .appeal-status.approved {
-  background: var(--color-bg-success-light);
+  background: linear-gradient(135deg, #0f2419 0%, #152019 100%);
   color: var(--color-text-success);
+  border-color: #1d3529;
 }
 
 [data-theme="dark"] .enrollment-pill.needs-reenrollment {
-  background: var(--color-bg-warning-light);
+  background: linear-gradient(135deg, #2a250f 0%, #2a250f 100%);
   color: var(--color-text-warning);
+  border-color: #3d3a1f;
 }
 
 [data-theme="dark"] .enrollment-pill.not-enrolled {
-  background: var(--color-bg-danger-light);
+  background: linear-gradient(135deg, #2a1416 0%, #2a1416 100%);
   color: var(--color-text-danger);
+  border-color: #3d1f22;
+}
+
+[data-theme="dark"] .appeal-status.pending {
+  background: linear-gradient(135deg, #2a250f 0%, #2a250f 100%);
+  color: var(--color-text-warning);
+  border-color: #3d3a1f;
+}
+
+[data-theme="dark"] .appeal-status.rejected {
+  background: linear-gradient(135deg, #2a1416 0%, #2a1416 100%);
+  color: var(--color-text-danger);
+  border-color: #3d1f22;
 }
 
 /* Calendar markers */
@@ -353,11 +445,16 @@
 [data-theme="dark"] .biometric-status { color: var(--color-text-muted); }
 
 [data-theme="dark"] .biometric-flow b {
-  background: var(--color-bg-input);
+  background: linear-gradient(135deg, #152019 0%, #1d2d24 100%);
   color: var(--color-text-success);
+  border-color: #1d3529;
 }
 
 [data-theme="dark"] .reader-instruction span { color: var(--color-text-muted); }
+
+[data-theme="dark"] .reader-instruction > i {
+  color: var(--brand-400);
+}
 
 [data-theme="dark"] .profile-avatar {
   background: var(--color-bg-input);
@@ -370,6 +467,12 @@
 [data-theme="dark"] .student-table thead th {
   border-bottom-color: var(--color-border-table);
   color: var(--color-text-muted);
+  background: rgba(32, 180, 134, .04);
+}
+
+[data-theme="dark"] .records-card .student-table thead th {
+  background: rgba(79, 206, 159, .04);
+  color: var(--brand-400);
 }
 
 /* Borders & topbar — solid opaque topbar with no visible seam */

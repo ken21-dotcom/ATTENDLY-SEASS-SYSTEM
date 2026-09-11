@@ -44,7 +44,7 @@
       <header class="student-topbar">
         <div><span class="student-breadcrumb">Workspace /</span><strong>Dashboard</strong></div>
         <div class="topbar-actions">
-          <button class="icon-button" type="button" aria-label="Notifications"><i class="bi bi-bell"></i></button>
+          <button class="icon-button" type="button" aria-label="Notifications" id="notificationBtn"><i class="bi bi-bell"></i><span class="notification-badge" id="notificationBadge">3</span></button>
           <button class="icon-button" type="button" aria-label="Toggle theme" data-theme-toggle><i class="bi bi-moon" data-theme-icon></i></button>
           <span class="topbar-date" id="todayLabel"></span>
         </div>
@@ -136,7 +136,7 @@
             <span class="card-menu"><i class="bi bi-megaphone"></i></span>
           </div>
           <div id="announcementList" class="announcement-list"></div>
-          <a class="text-link" href="#announcements">View all announcements <i class="bi bi-arrow-right"></i></a>
+          <button class="text-link" type="button" id="viewAllAnnouncements">View all announcements <i class="bi bi-arrow-right"></i></button>
         </article>
       </section>
 
@@ -191,6 +191,19 @@
   </div>
 
   <div id="toastContainer" class="position-fixed top-0 end-0 p-3"></div>
+
+  <!-- Notifications panel -->
+  <div class="notification-panel" id="notificationPanel" role="dialog" aria-modal="true" aria-labelledby="notificationPanelTitle" hidden>
+    <div class="notification-panel-head">
+      <div>
+        <p class="section-kicker">From the SCC</p>
+        <h2 id="notificationPanelTitle">Notifications</h2>
+      </div>
+      <button class="icon-button notification-close" type="button" aria-label="Close notifications"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notification-panel-list" id="notificationList"></div>
+  </div>
+  <div class="notification-backdrop" id="notificationBackdrop" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../js/data.js"></script>
