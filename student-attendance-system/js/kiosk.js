@@ -1,10 +1,17 @@
 /* ============================================================
-   Kiosk — self-service event check-in (no login required)
+   Kiosk — flagship self-service event check-in (no login required)
    ------------------------------------------------------------
    State machine: idle → scanning → processing → (success | error)
    Identity comes from FingerprintScanner (simulated until the real
    device is wired in). Attendance is recorded only after a verified
    scan, matching BR-007.
+
+   Enhancements over the base flow:
+   • Explicit "Tap to scan" button (ring + button both trigger scan).
+   • Live event countdown (starts in / in progress / closes).
+   • 3-tile live counts (checked-in / enrolled / attendance %).
+   • "Recent check-ins" ticker — last N successful scans.
+   • Richer result overlay (avatar initials on success).
 
    Security: all user-supplied strings are escaped via escapeHtml()
    before being injected into innerHTML. The manual entry form
@@ -40,6 +47,7 @@
     }
     renderEventHeader();
     updateCounts();
+    renderTicker();
   }
 
   function renderEventHeader() {
@@ -47,6 +55,7 @@
     if (!event) {
       els.eventName.innerHTML = 'No event selected.';
       els.eventMeta.textContent = 'Create an event in the SSC dashboard, then return here.';
+      hideCountdown();
       return;
     }
     // Live vs scheduled vs cancelled
@@ -60,24 +69,121 @@
     els.eventMeta.textContent = parts.join(' · ');
 
     const statusChip = els.statusChip;
+    statusChip.classList.remove('is-cancelled', 'is-live', 'is-upcoming');
     if (event.status === 'cancelled') {
       statusChip.textContent = 'Cancelled';
       statusChip.classList.add('is-cancelled');
+      hideCountdown();
     } else {
       statusChip.textContent = isToday ? 'Live now' : 'Upcoming';
-      statusChip.classList.remove('is-cancelled');
+      statusChip.classList.add(isToday ? 'is-live' : 'is-upcoming');
+      renderCountdown(event, isToday);
     }
   }
 
+  // ── Live countdown (updates every 20s) ──
+  function hideCountdown() {
+    els.countdown.hidden = true;
+    els.countdown.innerHTML = '';
+  }
+
+  function renderCountdown(event, isToday) {
+    const el = els.countdown;
+    el.hidden = false;
+    // Event time parsed as local time ("HH:MM" on the event's date).
+    const start = parseEventDateTime(event.date, event.time);
+    const now = new Date();
+    let diff = start - now; // ms until start (negative => already started)
+
+    // Events scheduled on a future day are shown as a day countdown.
+    if (!isToday) {
+      const days = Math.ceil(diff / 86400000);
+      el.innerHTML = `<i class="bi bi-hourglass-split"></i> Starts in ${days > 1 ? days + ' days' : '1 day'}`;
+      return;
+    }
+
+    if (diff > 0) {
+      el.innerHTML = `<i class="bi bi-hourglass-split"></i> Starts in ${formatCountdown(diff)}`;
+    } else {
+      // Live: show how long until the event window closes (assume 90 min).
+      const close = start + 90 * 60 * 1000;
+      const remaining = close - now;
+      if (remaining > 0) {
+        el.innerHTML = `<i class="bi bi-broadcast"></i> Live now · closes in ${formatCountdown(remaining)}`;
+      } else {
+        el.innerHTML = `<i class="bi bi-check-circle"></i> Check-in window has closed`;
+      }
+    }
+  }
+
+  /** "HH:MM" (local) + "YYYY-MM-DD" -> Date */
+  function parseEventDateTime(dateStr, timeStr) {
+    const d = new Date(dateStr + 'T' + timeStr);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  function formatCountdown(ms) {
+    const mins = Math.max(1, Math.round(ms / 60000));
+    if (mins < 60) return `${mins} min`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+  }
+
+  // ── Live counts — checked-in / enrolled / attendance % ──
   function updateCounts() {
     const attendance = getAttendance();
     const checkedIn = currentEventId
       ? attendance.filter((a) => a.eventId === currentEventId && (a.status === 'present' || a.status === 'late')).length
       : 0;
+
     els.count.textContent = checkedIn;
 
     const enrolled = (getBiometrics() || []).filter((b) => b.status === 'enrolled').length;
-    els.listCount.textContent = enrolled || getUsers().filter((u) => u.role === 'student').length;
+    const estimate = enrolled || getUsers().filter((u) => u.role === 'student').length;
+    els.listCount.textContent = estimate;
+
+    // Attendance % = checked-in / enrolled (only meaningful when enrollees > 0).
+    const denom = estimate || 1;
+    els.attendancePct.textContent = denom ? Math.round((checkedIn / denom) * 100) + '%' : '0%';
+  }
+
+  // ── Recent check-ins ticker (last N successful scans for this event) ──
+  const TICKER_MAX = 4;
+
+  function renderTicker() {
+    if (!els.ticker) return;
+    const attendance = getAttendance();
+    const recent = currentEventId
+      ? attendance.filter((a) => a.eventId === currentEventId && (a.status === 'present' || a.status === 'late'))
+      : [];
+    // Seed data may have no time; newest first.
+    const sorted = recent.slice().sort((a, b) => (b.time || '').localeCompare(a.time || ''));
+    const latest = sorted.slice(0, TICKER_MAX);
+
+    if (!latest.length) {
+      els.ticker.hidden = true;
+      return;
+    }
+    els.ticker.hidden = false;
+
+    const users = getUsers();
+    els.tickerList.innerHTML = latest.map((a) => {
+      const student = users.find((u) => u.id === a.studentId);
+      const name = student ? student.name : 'Student';
+      const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+      const firstName = name.split(' ')[0];
+      return (
+        `<div class="kiosk-ticker-item">` +
+          `<span class="kiosk-ticker-avatar">${escapeHtml(initials)}</span>` +
+          `<span class="kiosk-ticker-info">` +
+            `<span class="kiosk-ticker-name">${escapeHtml(firstName)} checked in</span>` +
+            `<span class="kiosk-ticker-time">${escapeHtml(a.time || 'now')}</span>` +
+          `</span>` +
+          `<i class="bi bi-check-circle-fill kiosk-ticker-check" aria-hidden="true"></i>` +
+        `</div>`
+      );
+    }).join('');
   }
 
   // ── Status rendering — drives the kiosk scan panel ──
@@ -120,7 +226,11 @@
   };
 
   function showResult(type, title, message, meta) {
-    els.resultIcon.className = `bi bi-${RESULT_ICONS[type] || 'info-circle-fill'} kiosk-result-icon is-${type}`;
+    // Set the state class on the wrapper (drives gradient disc colors)
+    // and a stable icon class on the inner <i> (drives glyph + white text).
+    const wrap = els.resultIconWrap || els.resultIcon.parentElement;
+    wrap.className = `kiosk-result-icon-wrap is-${type}`;
+    els.resultIcon.className = `bi bi-${RESULT_ICONS[type] || 'info-circle-fill'} kiosk-result-icon`;
     els.resultTitle.textContent = title;
     els.resultMessage.textContent = message;
     // meta is controlled HTML from our code — safe to use innerHTML
@@ -172,6 +282,7 @@
         );
         setStatus('success', 'Checked in', 'Attendance saved. You can go ahead.');
         updateCounts();
+        renderTicker();
       }
     } catch (err) {
       const code = err.code || 'device-error';
@@ -212,6 +323,7 @@
       );
       showToast('success', `${escapeHtml(student.name)} checked in.`);
       updateCounts();
+      renderTicker();
     }
   }
 
@@ -232,13 +344,19 @@
       event:        $('kioskEvent'),
       eventName:    $('kioskEventName'),
       eventMeta:    $('kioskEventMeta'),
-      statusChip:   $('kioskStatusChip'),
+      countdown:    $('kioskCountdown'),
+      statusChip:   $('kioskStatusBadge'),
       scanner:      $('kioskScanner'),
       statusText:   $('kioskStatusText'),
       scanHint:     $('kioskScanHint'),
+      scanBtn:      $('kioskScanBtn'),
       count:        $('kioskCount'),
       listCount:    $('kioskListCount'),
+      attendancePct: $('kioskAttendancePct'),
+      ticker:       $('kioskTicker'),
+      tickerList:   $('kioskTickerList'),
       resultOverlay: $('resultOverlay'),
+      resultIconWrap: $('resultIconWrap'),
       resultIcon:   $('resultIcon'),
       resultTitle:  $('resultTitle'),
       resultMessage: $('resultMessage'),
@@ -258,13 +376,19 @@
       currentEventId = els.event.value;
       renderEventHeader();
       updateCounts();
+      renderTicker();
     });
 
-    // The whole scanner ring is the "press to scan" affordance, plus a
-    // dedicated large hit area. Touch + mouse both work.
+    // The scanner ring AND the explicit scan button both trigger a scan.
     els.scanner.addEventListener('click', () => {
       if (!busy) runFingerprintScan();
     });
+    if (els.scanBtn) {
+      els.scanBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!busy) runFingerprintScan();
+      });
+    }
 
     // Manual entry collapse
     if (els.manualToggle) {
@@ -297,6 +421,9 @@
 
     tickClock();
     setInterval(tickClock, 1000);
+
+    // Refresh the countdown periodically.
+    setInterval(() => renderEventHeader(), 20000);
   }
 
   document.addEventListener('DOMContentLoaded', init);

@@ -20,9 +20,29 @@ document.addEventListener('DOMContentLoaded', function() {
     loadDashboardStats();
   }
 
-  // Manage students
+  // Manage students — grouped by Department → Course → Year Level
   if (document.getElementById('studentTableBody')) {
-    loadStudentsTable();
+    initGroupedStudentList({
+      tbodyId: 'studentTableBody',
+      countId: 'studentCount',
+      departmentFilterId: 'filterDepartment',
+      courseFilterId: 'filterCourse',
+      yearFilterId: 'filterYear',
+      searchId: 'studentSearch',
+      colspan: 5,
+      renderRow: (student) =>
+        `<td>${escapeHtml(student.id)}</td>` +
+        `<td>${escapeHtml(student.name)}</td>` +
+        `<td>${escapeHtml(student.email)}</td>` +
+        `<td>${yearBadge(student)}</td>` +
+        `<td><button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${escapeHtml(student.id)}')">Delete</button></td>`,
+    });
+
+    // Department → Course cascade for the Add modal.
+    if (document.getElementById('studentDepartment')) {
+      initOrgModalSelects('studentDepartment', 'studentCourse', 'studentYear');
+    }
+
     const addForm = document.getElementById('addStudentForm');
     if (addForm) {
       addForm.addEventListener('submit', function(e) {
@@ -38,11 +58,20 @@ document.addEventListener('DOMContentLoaded', function() {
           showToast('error', 'A user with this email already exists.');
           return;
         }
-        const newUser = { id: generateId('stu'), name, email, password: 'password123', role: 'student' };
+        const newUser = {
+          id: generateId('stu'),
+          name,
+          email,
+          password: hashPassword('password123'),
+          role: 'student',
+          department: (document.getElementById('studentDepartment') || {}).value || '',
+          course:     (document.getElementById('studentCourse') || {}).value || '',
+          yearLevel:  (document.getElementById('studentYear') || {}).value || '',
+        };
         users.push(newUser);
         setUsers(users);
         showToast('success', 'Student added.');
-        loadStudentsTable();
+        refreshGroupedStudentList();
         document.getElementById('addStudentModal').querySelector('.btn-close').click();
       });
     }
@@ -66,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
           showToast('error', 'A user with this email already exists.');
           return;
         }
-        const newUser = { id: generateId('off'), name, email, password: 'password123', role: 'ssc-officer' };
+        const newUser = { id: generateId('off'), name, email, password: hashPassword('password123'), role: 'ssc-officer' };
         users.push(newUser);
         setUsers(users);
         showToast('success', 'Officer added.');
@@ -104,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
           studentId,
           description,
           severity,
-          status: 'active',
+          status: 'pending-review',
           date: todayStr(),
           officerId: getCurrentUser() ? getCurrentUser().id : null,
           notes: notes || null
@@ -230,25 +259,8 @@ function loadDashboardStats() {
   document.getElementById('statEventsToday').textContent = eventsToday;
   document.getElementById('statAttendanceRate').textContent = attendanceRate + '%';
   document.getElementById('statActiveSanctions').textContent = activeSanctions;
-}
-
-function loadStudentsTable() {
-  const students = getUsers().filter(u => u.role === 'student');
-  const tbody = document.getElementById('studentTableBody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  students.forEach(student => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${escapeHtml(student.id)}</td>
-      <td>${escapeHtml(student.name)}</td>
-      <td>${escapeHtml(student.email)}</td>
-      <td>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${escapeHtml(student.id)}')">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
+  const rateProgress = document.getElementById('statProgressAttendance');
+  if (rateProgress) rateProgress.style.width = attendanceRate + '%';
 }
 
 function loadOfficersTable() {
@@ -295,7 +307,7 @@ function deleteUser(userId) {
   setFlaggedStudents(flagged);
   showToast('success', 'User deleted.');
   // Reload current table
-  if (document.getElementById('studentTableBody')) loadStudentsTable();
+  if (document.getElementById('studentTableBody')) refreshGroupedStudentList();
   if (document.getElementById('officerTableBody')) loadOfficersTable();
 }
 

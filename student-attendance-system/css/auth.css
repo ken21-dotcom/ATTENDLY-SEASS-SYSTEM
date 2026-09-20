@@ -58,10 +58,11 @@ body {
 
 /* ── Slideshow layers ──
    The four image <div>s sit behind the gradient overlay. Each fills the
-   hero at cover size. Slides crossfade over one another — each fades in
-   quickly on top of the outgoing one, holds, then dissolves out as the
-   next fades in — so there is never a dip to black between slides.
-   Total cycle: 20s (4 slides × 5s each). */
+   hero at cover size. The JS drives the crossfade by toggling .active, so
+   the visible image always matches the active progress segment (and manual
+   prev/next/clicks land on the right photo). The .55s opacity transition
+   lets the incoming image rise over the outgoing one — no dip to black, no
+   flash. A slow heroDrift scale gives each photo a whisper of life. */
 
 .auth-hero-slides {
   position: absolute;
@@ -76,20 +77,20 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   opacity: 0;
-  animation: heroFade 20s infinite;
+  transition: opacity .55s var(--ease);
 }
 
-.auth-hero-slide:nth-child(1) { animation-delay: 0s; }
-.auth-hero-slide:nth-child(2) { animation-delay: 5s; }
-.auth-hero-slide:nth-child(3) { animation-delay: 10s; }
-.auth-hero-slide:nth-child(4) { animation-delay: 15s; }
+.auth-hero-slide.active {
+  opacity: 1;
+  animation: heroDrift 5s linear forwards;
+}
 
-@keyframes heroFade {
-  0%    { opacity: 0; }   /* incoming, hidden behind the current slide */
-  6%    { opacity: 1; }   /* quick fade-in on top of the outgoing slide */
-  44%   { opacity: 1; }   /* hold at full opacity */
-  50%   { opacity: 0; }   /* dissolve out as the next slide fades in */
-  100%  { opacity: 0; }   /* stay hidden until its next turn */
+/* Slow editorial drift — a whisper of scale so the cue photo feels alive
+   while on screen. Reads as parallax against the static gradient overlay.
+   Stays under ~1%/s so it never reads as a deliberate zoom. */
+@keyframes heroDrift {
+  from { transform: scale(1); }
+  to   { transform: scale(1.045); }
 }
 
 /* Gradient overlay — deep forest green, two-stop for clean legibility */
@@ -161,18 +162,31 @@ body {
 
 .auth-hero-slide-content.active {
   display: block;
-  animation: slideFadeIn .5s var(--ease) both;
+  animation: slideFadeIn .45s var(--ease) both;
 }
 
-/* Enter: rise + fade while a touch of blur masks the hand-off from the
-   outgoing slide, so the swap reads as one continuous motion. */
+/* Gentle child stagger — the block, subtext and feature chips rise a hair
+   after one another. Parent carries the fade; children carry the slide. */
+.auth-hero-slide-content.active > * {
+  animation: slideChildIn .4s var(--ease) both;
+}
+.auth-hero-slide-content.active > *:nth-child(1) { animation-delay: .05s; }
+.auth-hero-slide-content.active > *:nth-child(2) { animation-delay: .1s; }
+.auth-hero-slide-content.active > *:nth-child(3) { animation-delay: .15s; }
+
 @keyframes slideFadeIn {
-  from { opacity: 0; transform: translateY(10px); filter: blur(3px); }
-  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+  from { opacity: 0; filter: blur(4px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+@keyframes slideChildIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-hero-slide-content.active {
+  .auth-hero-slide-content.active,
+  .auth-hero-slide-content.active > * {
     animation: none;
   }
 }
@@ -183,76 +197,164 @@ body {
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-top: 32px;
-  padding-top: 24px;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
 }
 
 .auth-hero-indicators {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 380px;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .07));
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .18), inset 0 0 0 1px rgba(255, 255, 255, .18);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  backdrop-filter: blur(8px) saturate(1.1);
 }
 
-/* Autoplay progress indicators —
-   Active indicator is an elongated pill whose fill bar animates
-   left→right over the slide dwell time; inactive are plain dots. */
+/* Story-style progress segments —
+   One slim segment per slide. The active segment's fill travels
+   empty → full over the slide's dwell time (heroProgressFill, 5s linear,
+   driven by animationend in auth.js so it never drifts from the advance).
+   Finished segments sit solid, upcoming ones show only a dim translucent
+   track. A white translucent fill + glass backdrop behind the row keep the
+   bars legible over both light and dark photo areas. */
 .auth-hero-progress {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-circle);
-  border: 1.5px solid rgba(255, 255, 255, .45);
-  background: transparent;
+  --_fill-bg: linear-gradient(90deg,
+    #2f9e74 0%,
+    var(--campus-accent, #4fce9f) 45%,
+    #7fe3b8 78%,
+    #c6f7e6 100%);
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 18px;
+  height: 22px;          /* generous click target; only the track is visible */
   padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  transition: width .3s var(--ease),
-              border-color .3s var(--ease),
-              background-color .3s var(--ease);
-  overflow: hidden;
+  flex-shrink: 1;
 }
 
+/* The visible 3px bar — pill caps, translucent white so it never fights the
+   photo; a soft drop shadow lifts it off the image. */
+.auth-hero-track {
+  display: block;
+  position: relative;   /* containing block for the absolute fill */
+  width: 100%;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, .30);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .38),
+    0 1px 2px rgba(0, 0, 0, .32);
+  overflow: hidden;
+  transition:
+    transform .18s var(--ease),
+    background-color .3s var(--ease),
+    box-shadow .3s var(--ease);
+}
+
+/* Pointer-fine hover — subtle swell and brighten so the segment reads as
+   clickable. The running/active segment stays calm. */
 @media (hover: hover) and (pointer: fine) {
-  .auth-hero-progress:hover {
-    border-color: rgba(255, 255, 255, .75);
+  .auth-hero-progress:hover:not(.active):not(.done) .auth-hero-track {
+    transform: scaleY(1.5);
+    background: rgba(255, 255, 255, .46);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, .6),
+      0 1px 4px rgba(0, 0, 0, .4);
   }
 }
 
-.auth-hero-progress.active {
-  width: 28px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, .12);
-  border-color: rgba(255, 255, 255, .25);
+/* Keyboard focus — a crisp accent ring around the active bar. */
+.auth-hero-progress:focus-visible {
+  outline: none;
+}
+.auth-hero-progress:focus-visible .auth-hero-track {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .75),
+    0 0 0 2px var(--campus-accent),
+    0 1px 4px rgba(0, 0, 0, .4);
 }
 
-.auth-hero-progress-fill {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--campus-accent);
-  transform: scaleX(0);
-  transform-origin: left center;
-  visibility: hidden;
+.auth-hero-progress.active,
+.auth-hero-progress.active:hover {
+  cursor: default;
 }
 
-/* Animating fill on the active indicator — paused via animation-play-state
-   so it freezes (and resumes) in lockstep with the autoplay timer. */
+/* Active / done — the fill carries a green→mint gradient plus a soft white
+   edge highlight pinned to the leading edge, so the newest-filled sliver
+   reads brightest as it travels. */
+.auth-hero-progress.active .auth-hero-progress-fill,
+.auth-hero-progress.done .auth-hero-progress-fill {
+  background-color: transparent;
+  background-image:
+    linear-gradient(90deg, transparent 72%, rgba(255, 255, 255, .30) 88%, rgba(255, 255, 255, .62) 100%),
+    var(--_fill-bg);
+}
+
+/* Done — filled and held. A brief settle pulse makes the tick of completion
+   tangible before the next segment picks up. */
+.auth-hero-progress.done .auth-hero-progress-fill {
+  transform: scaleX(1);
+  animation: heroSegmentSettle .38s var(--ease) both;
+}
+
+/* Active — animates empty → full over the dwell time. A soft glow rides
+   along the fill so progress reads even over busy texture. */
 .auth-hero-progress.active .auth-hero-progress-fill {
-  visibility: visible;
+  transform: scaleX(0);
+  box-shadow: 0 0 8px rgba(79, 206, 159, .42);
   animation: heroProgressFill 5s linear forwards;
-}
-
-.auth-hero-progress.paused .auth-hero-progress-fill {
-  animation-play-state: paused;
-}
-
-.auth-hero-progress.running .auth-hero-progress-fill {
-  animation-play-state: running;
 }
 
 @keyframes heroProgressFill {
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
+}
+
+/* Clicked segment — a quick glow-and-swell before its fill takes over, so a
+   jump lands smoothly instead of cutting. */
+.auth-hero-progress.pop .auth-hero-track {
+  animation: heroSegPop .26s var(--ease) both;
+}
+
+@keyframes heroSegPop {
+  0%   { transform: scaleY(1.6); filter: brightness(1.35); }
+  100% { transform: scaleY(1);   filter: brightness(1); }
+}
+
+@keyframes heroSegmentSettle {
+  0%   { transform: scaleX(1) scaleY(1);   filter: brightness(1.05); }
+  45%  { transform: scaleX(1) scaleY(1.8); filter: brightness(1.28); }
+  100% { transform: scaleX(1) scaleY(1);   filter: brightness(1); }
+}
+
+/* Fill element — grows left → right inside the segment's track */
+.auth-hero-progress-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: transparent;
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Pause/resume — freeze the active fill in place while hovering the hero */
+.auth-hero-progress.paused .auth-hero-progress-fill {
+  animation-play-state: paused;
+}
+.auth-hero-progress.running .auth-hero-progress-fill {
+  animation-play-state: running;
 }
 
 .auth-hero-slide-label {
@@ -266,6 +368,45 @@ body {
 
 .auth-hero-slide-num {
   color: rgba(255, 255, 255, .9);
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  height: 1.3em;
+  vertical-align: bottom;
+  line-height: 1.3;
+  width: 1.6em;
+  text-align: center;
+}
+
+.auth-hero-slide-num-inner {
+  display: block;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  transition: transform .35s cubic-bezier(.4, .0, .2, 1),
+              opacity .35s cubic-bezier(.4, .0, .2, 1);
+}
+
+.auth-hero-slide-num-inner.current {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.auth-hero-slide-num-inner.exit-up {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.auth-hero-slide-num-inner.enter-down {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+/* Fade-reset cycle on the indicators row */
+.auth-hero-controls.fade-reset {
+  opacity: 0;
+  transition: opacity .4s cubic-bezier(.4, .0, .2, 1);
 }
 
 .auth-hero-arrows {
@@ -714,12 +855,35 @@ body {
     transition: none;
   }
 
+  .auth-hero-slide {
+    transition: none;
+    animation: none;
+  }
+
   .auth-hero-progress.active .auth-hero-progress-fill {
     animation: none;
     transform: scaleX(1);
   }
 
-  .auth-hero-slide-content.active {
+  .auth-hero-progress.done .auth-hero-progress-fill,
+  .auth-hero-progress.pop .auth-hero-track {
+    animation: none;
+  }
+
+  .auth-hero-track {
+    transform: none;
+  }
+
+  .auth-hero-slide-num-inner {
+    transition: none;
+  }
+
+  .auth-hero-controls.fade-reset {
+    transition: none;
+  }
+
+  .auth-hero-slide-content.active,
+  .auth-hero-slide-content.active > * {
     animation: none;
   }
 

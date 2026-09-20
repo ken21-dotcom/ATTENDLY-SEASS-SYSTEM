@@ -95,6 +95,12 @@
   --transition-normal: .22s;
   --transition-slow: .35s;
 
+  /* ── Accent line glow — single shared visual language for every
+     top-accent bar (stat cards, section/container dividers).
+     Center-bright brand glow fading to transparent at both ends.
+     Dark-theme override lives in dark-style.css. ── */
+  --accent-glow: linear-gradient(90deg, transparent, rgba(14, 159, 110, .92) 50%, transparent);
+
   /* ── Layout ── */
   --sidebar-width: 244px;
   --topbar-height: 72px;

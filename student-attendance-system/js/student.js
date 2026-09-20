@@ -82,13 +82,13 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast('error', 'User not found.');
         return;
       }
-      if (users[userIndex].password !== currentPassword) {
+      if (!passwordMatches(currentPassword, users[userIndex].password)) {
         showToast('error', 'Current password is incorrect.');
         return;
       }
-      users[userIndex].password = newPassword;
+      users[userIndex].password = hashPassword(newPassword);
       setUsers(users);
-      setSession({ ...user, password: newPassword });
+      setSession({ ...user, password: hashPassword(newPassword) });
       passwordForm.reset();
       document.getElementById('passwordSaved').classList.remove('d-none');
       showToast('success', 'Password updated successfully.');
@@ -181,12 +181,28 @@ function wmoLookup(code) {
   return WMO_CODES[code] || { desc: 'Unknown', icon: 'bi-question-circle' };
 }
 
+/**
+ * Pick the hourly value whose timestamp (Asia/Manila, ISO) matches the API's
+ * current forecast time, so the correct hour is used regardless of the
+ * viewer's device clock/timezone. Falls back to the nearest future hour.
+ */
+function pickHourlyValue(times, values, currentTime) {
+  if (!times || !values || !times.length) return null;
+  var target = (currentTime || '').slice(0, 13);
+  if (!target) return values[0];
+  for (var i = 0; i < times.length; i++) {
+    if (times[i].slice(0, 13) >= target) return values[i];
+  }
+  return values[values.length - 1];
+}
+
 function loadWeather() {
   // Clear any existing auto-refresh timer to avoid stacking
   if (weatherRefreshTimer) { clearInterval(weatherRefreshTimer); weatherRefreshTimer = null; }
 
-  var LAT  = 7.8213;
-  var LON  = 123.4285;
+  // JHCSC Balangasan, Pagadian City
+  var LAT  = 7.8265;
+  var LON  = 123.4198;
   var API  = 'https://api.open-meteo.com/v1/forecast'
            + '?latitude=' + LAT
            + '&longitude=' + LON
@@ -203,43 +219,65 @@ function loadWeather() {
   var iconWrap    = document.getElementById('weatherIcon');
   var updatedEl   = document.getElementById('weatherUpdated');
 
-  fetch(API, { signal: AbortSignal.timeout(10000) })
-    .then(function (res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    })
-    .then(function (data) {
-      var cur  = data.current;
-      var hour = new Date().getHours();
-      var rainProb = data.hourly && data.hourly.precipitation_probability
-        ? data.hourly.precipitation_probability[hour]
-        : null;
+  function showUnavailable() {
+    tempEl.textContent  = '--°';
+    condEl.textContent  = 'Weather data unavailable';
+    feelsEl.textContent = '';
+    humEl.textContent   = '--%';
+    rainEl.textContent  = '--%';
+    iconWrap.innerHTML  = '<i class="bi bi-cloud-slash"></i>';
+    if (updatedEl) updatedEl.textContent = '';
+  }
 
-      var info = wmoLookup(cur.weather_code);
+  var attempts = 0;
+  var maxAttempts = 3;
 
-      tempEl.textContent    = Math.round(cur.temperature_2m) + '°';
-      condEl.textContent    = info.desc;
-      feelsEl.textContent   = 'Feels like ' + Math.round(cur.apparent_temperature) + '°';
-      humEl.textContent     = cur.relative_humidity_2m + '%';
-      rainEl.textContent    = rainProb !== null ? rainProb + '%' : '—';
-      iconWrap.innerHTML    = '<i class="bi ' + info.icon + '"></i>';
+  function callApi() {
+    attempts++;
 
-      var now = new Date();
-      updatedEl.textContent = 'Updated '
-        + now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    // Manual timeout so older browsers without AbortSignal.timeout still work
+    var controller = new AbortController();
+    var timeoutId  = setTimeout(function () { controller.abort(); }, 10000);
 
-      // Auto-refresh every 15 minutes
-      weatherRefreshTimer = setInterval(loadWeather, 15 * 60 * 1000);
-    })
-    .catch(function () {
-      tempEl.textContent  = '--°';
-      condEl.textContent  = 'Weather data unavailable';
-      feelsEl.textContent = '';
-      humEl.textContent   = '--%';
-      rainEl.textContent  = '--%';
-      iconWrap.innerHTML  = '<i class="bi bi-cloud-slash"></i>';
-      if (updatedEl) updatedEl.textContent = '';
-    });
+    fetch(API, { signal: controller.signal })
+      .then(function (res) {
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        var cur     = data.current;
+        var rainProb = data.hourly && data.hourly.precipitation_probability
+          ? pickHourlyValue(data.hourly.time, data.hourly.precipitation_probability, cur.time)
+          : null;
+
+        var info = wmoLookup(cur.weather_code);
+
+        tempEl.textContent    = Math.round(cur.temperature_2m) + '°';
+        condEl.textContent    = info.desc;
+        feelsEl.textContent   = 'Feels like ' + Math.round(cur.apparent_temperature) + '°';
+        humEl.textContent     = cur.relative_humidity_2m + '%';
+        rainEl.textContent    = rainProb !== null ? rainProb + '%' : '—';
+        iconWrap.innerHTML    = '<i class="bi ' + info.icon + '"></i>';
+
+        var now = new Date();
+        updatedEl.textContent = 'Updated '
+          + now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+        // Auto-refresh every 15 minutes
+        weatherRefreshTimer = setInterval(loadWeather, 15 * 60 * 1000);
+      })
+      .catch(function () {
+        clearTimeout(timeoutId);
+        if (attempts < maxAttempts) {
+          setTimeout(callApi, 1000 * attempts);
+          return;
+        }
+        showUnavailable();
+      });
+  }
+
+  callApi();
 }
 
 function loadEnrollmentStatus(studentId) {
@@ -390,18 +428,26 @@ function renderMiniCalendar(monthDate, events) {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today = new Date();
-  const eventDates = new Set(events.map(event => event.date));
+  const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const visibleEvents = events.filter(event => event && event.date);
   const cells = [];
 
   for (let blankDay = 0; blankDay < firstDay; blankDay += 1) cells.push('<span class="calendar-cell empty"></span>');
   for (let day = 1; day <= daysInMonth; day += 1) {
-    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateKey = `${monthPrefix}-${String(day).padStart(2, '0')}`;
     const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-    const hasEvent = eventDates.has(dateKey);
-    cells.push(`<span class="calendar-cell ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}">${day}</span>`);
+    const dayEvents = visibleEvents.filter(event => event.date === dateKey);
+    const hasEvent = dayEvents.length > 0;
+    const titleAttr = hasEvent ? ` title="${dayEvents.length} ${dayEvents.length === 1 ? 'event' : 'events'}"` : '';
+    cells.push(`<span class="calendar-cell ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}"${titleAttr}>${day}</span>`);
   }
 
-  document.getElementById('calendarMonth').textContent = monthDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  document.getElementById('calendarMonthLabel').textContent = monthDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const countEl = document.getElementById('calendarEventCount');
+  if (countEl) {
+    const eventCount = visibleEvents.filter(event => event.date.startsWith(monthPrefix)).length;
+    countEl.textContent = eventCount === 1 ? '1 event' : `${eventCount} events`;
+  }
   calendar.innerHTML = cells.join('');
 }
 

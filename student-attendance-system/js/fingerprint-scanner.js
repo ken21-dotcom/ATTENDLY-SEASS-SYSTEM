@@ -44,8 +44,18 @@ const FingerprintScanner = (function () {
    * exercising the full attendance flow rather than always hitting the
    * first student in the list.
    */
+  function loadBiometricRegistry() {
+    // IMPORTANT: this key must match STORAGE_KEYS.biometrics in data.js
+    // ('attendly_biometrics'). The legacy 'sass_biometrics' fallback covers
+    // storage seeded before the key rename.
+    const raw = localStorage.getItem('attendly_biometrics')
+      || localStorage.getItem('sass_biometrics')
+      || '[]';
+    return JSON.parse(raw);
+  }
+
   function matchRegisteredStudent() {
-    const biometrics = JSON.parse(localStorage.getItem('sass_biometrics') || '[]');
+    const biometrics = loadBiometricRegistry();
     const enrolled = biometrics.filter((b) => b.status === 'enrolled');
     // No enrolled students at all -> a scanned finger can never be matched.
     if (enrolled.length === 0) return null;

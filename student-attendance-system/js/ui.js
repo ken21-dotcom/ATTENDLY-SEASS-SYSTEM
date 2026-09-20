@@ -139,3 +139,252 @@ function toggleEmptyState(containerId, hasData) {
     empty.classList.toggle('d-none', hasData);
   }
 }
+
+
+/* ============================================================
+   Grouped Student List (Department → Course → Year Level)
+   ------------------------------------------------------------
+   Shared by the SSC and Admin "Manage Students" pages. Renders the
+   student table as collapsible department + course sections (Year
+   Level stays a column so rows stay compact), backed by the three
+   org filter dropdowns and a name/ID/email search box. Each page
+   supplies a renderRow(student) callback for its own columns — the
+   grouping / filter / collapse behaviour lives here.
+   ============================================================ */
+
+/**
+ * Initialise the grouped, filterable student list on a manage-students
+ * page: populate the filter dropdowns, wire search + collapse, render
+ * into the table body. Re-render later via refreshGroupedStudentList().
+ *
+ * @param {object} opts
+ * @param {string}   [opts.tbodyId='studentTableBody']
+ * @param {string}   [opts.countId='studentCount']
+ * @param {string}   [opts.departmentFilterId='filterDepartment']
+ * @param {string}   [opts.courseFilterId='filterCourse']
+ * @param {string}   [opts.yearFilterId='filterYear']
+ * @param {string}   [opts.searchId='studentSearch']
+ * @param {number}   [opts.colspan=5]
+ * @param {function(object):string} opts.renderRow — returns the cell HTML for one student row
+ */
+function initGroupedStudentList(opts) {
+  const tbody = document.getElementById(opts.tbodyId || 'studentTableBody');
+  if (!tbody) return;
+
+  const deptSel   = document.getElementById(opts.departmentFilterId || 'filterDepartment');
+  const courseSel = document.getElementById(opts.courseFilterId   || 'filterCourse');
+  const yearSel   = document.getElementById(opts.yearFilterId     || 'filterYear');
+  const searchEl  = document.getElementById(opts.searchId         || 'studentSearch');
+  const colspan   = opts.colspan || 5;
+  const taxonomy  = getStudentOrgTaxonomy();
+
+  // ── Filter dropdown options ──
+  if (deptSel) {
+    deptSel.innerHTML = '<option value="">All Departments</option>' +
+      taxonomy.departments.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('') +
+      `<option value="${UNASSIGNED}">${UNASSIGNED}</option>`;
+  }
+  if (yearSel) {
+    yearSel.innerHTML = '<option value="">All Year Levels</option>' +
+      taxonomy.yearLevels.map(y => `<option value="${y}">${escapeHtml(getStudentYearLabel(y))}</option>`).join('') +
+      `<option value="${UNASSIGNED}">${UNASSIGNED}</option>`;
+  }
+
+  // Course options follow the currently selected Department.
+  function fillCourseOptions(selectedDept) {
+    if (!courseSel) return;
+    let courses;
+    if (!selectedDept) {
+      courses = [];
+      Object.values(taxonomy.coursesByDept).forEach(list => list.forEach(c => courses.push(c)));
+      courses.push(UNASSIGNED);
+    } else if (selectedDept === UNASSIGNED) {
+      courses = [UNASSIGNED];
+    } else {
+      courses = taxonomy.coursesByDept[selectedDept] || [];
+    }
+    courseSel.innerHTML = '<option value="">All Courses</option>' +
+      courses.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  }
+
+  function readState() {
+    return {
+      department: deptSel   ? deptSel.value  : '',
+      course:     courseSel ? courseSel.value : '',
+      yearLevel:  yearSel   ? yearSel.value  : '',
+      query:      searchEl  ? searchEl.value : '',
+    };
+  }
+
+  function render() {
+    const state   = readState();
+    const all     = getUsers().filter(u => u.role === 'student');
+    const visible = applyStudentFilters(all, state, state.query);
+
+    const countEl = document.getElementById(opts.countId || 'studentCount');
+    if (countEl) countEl.textContent = `${visible.length} of ${all.length} students`;
+
+    tbody.innerHTML = '';
+
+    if (!visible.length) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="${colspan}" class="text-center text-muted py-4">` +
+        '<i class="bi bi-people fs-5 me-2"></i>No students match the current filters.</td>';
+      tbody.appendChild(tr);
+      return;
+    }
+
+    groupStudentsByOrg(visible).forEach(group => {
+      const studentCount = group.courses.reduce((n, c) => n + c.students.length, 0);
+      tbody.appendChild(makeOrgHeadRow(group.department, `${group.courses.length} course${group.courses.length === 1 ? '' : 's'} · ${studentCount} student${studentCount === 1 ? '' : 's'}`, colspan, 'dept'));
+      group.courses.forEach(courseGroup => {
+        tbody.appendChild(makeOrgHeadRow(courseGroup.course, `${courseGroup.students.length} student${courseGroup.students.length === 1 ? '' : 's'}`, colspan, 'course'));
+        courseGroup.students.forEach(student => {
+          const tr = document.createElement('tr');
+          tr.dataset.kind = 'student';
+          tr.innerHTML = opts.renderRow(student);
+          tbody.appendChild(tr);
+        });
+      });
+    });
+  }
+
+  // Collapse/expand everything below a department or course header.
+  function toggleGroup(headRow) {
+    const level = headRow.dataset.level; // 'dept' | 'course'
+    const willCollapse = !headRow.classList.contains('org-group-collapsed');
+    headRow.classList.toggle('org-group-collapsed', willCollapse);
+    headRow.setAttribute('aria-expanded', String(!willCollapse));
+    let node = headRow.nextElementSibling;
+    while (node) {
+      if (node.dataset.kind === 'org-head') {
+        // Stop at the next department head (after a dept header) or the
+        // next course/department head (after a course header).
+        if (level === 'course' || node.dataset.level === 'dept') break;
+      }
+      node.classList.toggle('org-group-hidden', willCollapse);
+      node = node.nextElementSibling;
+    }
+  }
+
+  tbody.addEventListener('click', (e) => {
+    const head = e.target.closest && e.target.closest('.org-group-head');
+    if (head) toggleGroup(head);
+  });
+  tbody.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const head = e.target.closest && e.target.closest('.org-group-head');
+    if (head) { e.preventDefault(); toggleGroup(head); }
+  });
+
+  // ── Filter + search wiring ──
+  if (deptSel) deptSel.addEventListener('change', () => {
+    fillCourseOptions(deptSel.value);
+    // A course picked under the previous department may no longer exist.
+    if (courseSel && courseSel.value && !courseSel.querySelector(`option[value="${courseSel.value}"]`)) {
+      courseSel.value = '';
+    }
+    render();
+  });
+  if (courseSel) courseSel.addEventListener('change', render);
+  if (yearSel)   yearSel.addEventListener('change', render);
+  if (searchEl)  searchEl.addEventListener('input', render);
+
+  fillCourseOptions(deptSel ? deptSel.value : '');
+  render();
+
+  // Expose a re-render hook so add/edit/delete handlers can refresh.
+  window.__refreshStudentList = render;
+}
+
+/** Re-render the grouped student list with the current filter state. */
+function refreshGroupedStudentList() {
+  if (typeof window.__refreshStudentList === 'function') window.__refreshStudentList();
+}
+
+/**
+ * Build a collapsible department (level 'dept') or course (level
+ * 'course') header row spanning every column.
+ */
+function makeOrgHeadRow(title, pillText, colspan, level) {
+  const tr = document.createElement('tr');
+  tr.dataset.kind  = 'org-head';
+  tr.dataset.level = level;
+  tr.className = 'org-group-head ' + (level === 'dept' ? 'org-group-head-dept' : 'org-group-head-course');
+  tr.setAttribute('role', 'button');
+  tr.setAttribute('tabindex', '0');
+  tr.setAttribute('aria-expanded', 'true');
+  const icon = level === 'dept' ? 'bi-buildings-fill' : 'bi-journal-text';
+  tr.innerHTML =
+    `<td colspan="${colspan}">` +
+      '<div class="org-group-label">' +
+        '<span class="org-group-chevron"><i class="bi bi-chevron-down"></i></span>' +
+        `<i class="bi ${icon} org-group-icon"></i>` +
+        `<span class="org-group-title">${escapeHtml(title)}</span>` +
+        `<span class="org-group-pill">${escapeHtml(pillText)}</span>` +
+      '</div>' +
+    '</td>';
+  return tr;
+}
+
+/**
+ * Populate the Department/Course/Year selects inside Add/Edit student
+ * modals; the course options follow the selected department. Pass an
+ * optional `initial` record to pre-fill existing values for editing.
+ *
+ * @returns {{ deptSel: HTMLSelectElement, courseSel: HTMLSelectElement, yearSel: HTMLSelectElement }}
+ */
+function initOrgModalSelects(deptId, courseId, yearId, initial) {
+  const deptSel   = document.getElementById(deptId);
+  const courseSel = courseId ? document.getElementById(courseId) : null;
+  const yearSel   = document.getElementById(yearId);
+  const init      = initial || {};
+  const taxonomy  = getStudentOrgTaxonomy();
+
+  function fillDepartment(value) {
+    if (!deptSel) return;
+    deptSel.innerHTML = '<option value="">Select department…</option>' +
+      taxonomy.departments.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('') +
+      `<option value="${UNASSIGNED}">${UNASSIGNED}</option>`;
+    deptSel.value = value || '';
+  }
+
+  function fillCourse(department, value) {
+    if (!courseSel) return;
+    const courses = department
+      ? (department === UNASSIGNED ? [UNASSIGNED] : (taxonomy.coursesByDept[department] || []))
+      : [];
+    courseSel.innerHTML = '<option value="">Select course…</option>' +
+      courses.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    courseSel.value = value || '';
+  }
+
+  function fillYear(value) {
+    if (!yearSel) return;
+    yearSel.innerHTML = '<option value="">Select year…</option>' +
+      taxonomy.yearLevels.map(y => `<option value="${y}">${escapeHtml(getStudentYearLabel(y))}</option>`).join('');
+    yearSel.value = value || '';
+  }
+
+  fillDepartment(init.department);
+  fillCourse(init.department, init.course);
+  fillYear(init.yearLevel);
+
+  if (deptSel && courseSel) {
+    deptSel.addEventListener('change', () => { courseSel.value = ''; fillCourse(deptSel.value); });
+  }
+
+  return { deptSel, courseSel, yearSel };
+}
+
+/**
+ * Year Level badge HTML for a student row in a grouped list.
+ * @returns {string}
+ */
+function yearBadge(student) {
+  const org      = normalizeStudentOrg(student);
+  const assigned = org.yearLevel !== UNASSIGNED;
+  const cls      = assigned ? 'year-badge' : 'year-badge year-unassigned';
+  const label    = assigned ? getStudentYearLabel(org.yearLevel) : UNASSIGNED;
+  return `<span class="${cls}">${escapeHtml(label)}</span>`;
+}

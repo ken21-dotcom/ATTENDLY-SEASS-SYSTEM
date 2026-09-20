@@ -1,5 +1,10 @@
 /* ========================================
-   Student Dashboard & Subpages — Modern refresh
+   Student Dashboard & Subpages
+
+   Layout, components, and interactions for
+   the student portal. Defines the shell,
+   sidebar navigation, stat cards, charts,
+   calendar, and all subpage layouts.
    ======================================== */
 
 .student-dashboard-page {
@@ -408,12 +413,7 @@ button.text-link {
   cursor: pointer;
 }
 
-/* --- Stat Grid --- */
-.student-stat-grid {
-  display: grid;
-  grid-template-columns: 1.45fr 1fr 1fr;
-  gap: 16px;
-}
+/* Stat cards now live in css/stat-card.css (shared component). */
 
 .dashboard-card {
   border: 1px solid var(--color-border-default);
@@ -424,76 +424,43 @@ button.text-link {
               transform var(--transition-normal) var(--ease),
               border-color var(--transition-normal) var(--ease);
   position: relative;
-  overflow: hidden;
+  /* visible so the card-heading legend label can straddle the top border;
+     the rounded corners stay clean via border-radius on the ::before bar */
+  overflow: visible;
+  /* legend label inset — flush cards share the heading's 16px gutter;
+     padded variant cards override this to match their own gutter */
+  --legend-gutter: 16px;
 }
 
+/* Section-header divider — the top accent on cards whose .card-heading
+   carries a legend pill ("Your activity", "From the SCC", "Event log", …).
+   Decorative: stays always visible at a soft center-bright glow, curving
+   with the card's rounded top edge exactly like the stat-card bar. */
 .dashboard-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--brand-400), var(--brand-600));
-  opacity: 0;
-  transition: opacity var(--transition-normal) var(--ease);
+  height: 5px;
+  background: var(--accent-glow);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .dashboard-card:hover {
-    box-shadow: var(--shadow-card-hover);
+    box-shadow: var(--shadow-card-hover), 0 1px 8px rgba(14, 159, 110, .08);
     transform: translateY(-2px);
     border-color: var(--brand-200);
   }
+}
 
-  .dashboard-card:hover::before {
-    opacity: 1;
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-card:hover {
+    transform: none;
   }
 }
 
-.stat-card {
-  min-height: 140px;
-  padding: 22px 24px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
-}
-
-.stat-card-featured {
-  border-color: var(--brand-200);
-  background: linear-gradient(135deg, #ffffff 0%, var(--brand-50) 50%, #e8f5ee 100%);
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-card), 0 1px 4px rgba(14,159,110,.06);
-}
-
-.stat-card-featured::before {
-  content: '';
-  position: absolute;
-  top: -40%;
-  right: -20%;
-  width: 160px;
-  height: 160px;
-  border-radius: var(--radius-circle);
-  background: radial-gradient(circle, rgba(14,159,110,.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.stat-card-featured::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--brand-400), var(--brand-600));
-  opacity: 0;
-  transition: opacity var(--transition-fast) var(--ease);
-}
-
-.stat-card-featured:hover::after {
-  opacity: 1;
-}
-
-.stat-heading,
 .card-heading {
   display: flex;
   align-items: start;
@@ -505,44 +472,9 @@ button.text-link {
   letter-spacing: .01em;
 }
 
-.stat-heading i,
 .card-menu {
   color: var(--color-text-muted);
   transition: color var(--transition-fast) var(--ease);
-}
-
-.stat-value {
-  margin: 16px 0 14px;
-  color: var(--color-text-heading);
-  font-size: 2.2rem;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -.04em;
-  font-variant-numeric: tabular-nums;
-  background: linear-gradient(135deg, var(--color-text-heading) 0%, #2a3d33 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.stat-card small {
-  color: var(--color-text-muted);
-  font-size: .72rem;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.stat-card small i {
-  color: var(--brand-500);
-  font-size: .68rem;
-}
-
-.stat-card-featured small i { color: var(--brand-500); }
-
-.stat-note {
-  display: block;
-  margin-top: 18px;
 }
 
 /* Enrollment pill — status badges for biometric enrollment state */
@@ -582,43 +514,6 @@ button.text-link {
   50% { box-shadow: 0 0 0 5px rgba(220, 53, 69, .06); }
 }
 
-/* Progress Track */
-.progress-track {
-  height: 6px;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, #e8f0eb 0%, #d4e0d8 100%);
-  margin: 6px 0;
-  box-shadow: var(--shadow-inset), 0 1px 2px rgba(0,0,0,.03);
-}
-
-.progress-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand-400), var(--brand-500), var(--brand-600));
-  transition: width .8s var(--ease-in-out);
-  position: relative;
-  box-shadow: 0 1px 3px rgba(14, 159, 110, .2);
-}
-
-.progress-track span::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.3) 50%, transparent 100%);
-  animation: progressShimmer 2s ease-in-out infinite;
-}
-
-@keyframes progressShimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .progress-track span::after { animation: none; }
-}
-
 /* --- Dashboard Columns --- */
 .dashboard-columns {
   display: grid;
@@ -641,6 +536,43 @@ button.text-link {
   font-weight: 700;
   letter-spacing: -.01em;
   line-height: 1.3;
+}
+
+/* ── Card-heading legend label ──
+   A section label that straddles the card's top border the way a
+   <fieldset> legend does: a solid surface background plus horizontal
+   padding interrupts the border line behind the text, is inset from the
+   card's left edge by the content gutter, and sits vertically centred
+   on the border line. */
+.card-heading .section-kicker {
+  position: absolute;
+  top: -14px;
+  left: var(--legend-gutter);
+  margin: 0;
+  padding: 4px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-card);
+  z-index: 1;
+  white-space: nowrap;
+}
+
+/* Padded variant cards: keep the legend label on the same left edge as
+   the card's own content gutter instead of the flush-card default. */
+.attendance-chart-card, .announcements-card, .calendar-card, .weather-card { --legend-gutter: 22px; }
+.records-card { --legend-gutter: 28px; }
+.appeal-card, .profile-card, .profile-biometric-card { --legend-gutter: 26px; }
+.student-id-card { --legend-gutter: 28px; }
+
+/* Records card uses a tinted gradient surface — match the label to it
+   so the border interruption is seamless in both themes. */
+.records-card .card-heading .section-kicker {
+  background: #f1faf5;
+  border-color: var(--brand-200);
+}
+[data-theme="dark"] .records-card .card-heading .section-kicker {
+  background: #1b2a22;
+  border-color: #2a3f33;
 }
 
 /* Attendance Donut Chart */
@@ -796,28 +728,28 @@ button.text-link {
 }
 
 /* Calendar */
-.calendar-controls { display: flex; gap: 5px; }
+.calendar-controls { display: flex; gap: 6px; }
 
 .calendar-controls .icon-button {
-  width: 28px;
-  height: 28px;
-  font-size: .7rem;
+  width: 32px;
+  height: 32px;
+  font-size: .78rem;
 }
 
 .calendar-weekdays,
 .mini-calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 6px;
   text-align: center;
 }
 
 .calendar-weekdays {
-  margin: 20px 0 10px;
-  padding-bottom: 8px;
+  margin: 18px 0 8px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--color-border-default);
   color: var(--color-text-muted);
-  font-size: .62rem;
+  font-size: .64rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -830,7 +762,7 @@ button.text-link {
   border-radius: 10px;
   color: var(--color-text-primary);
   font-size: .74rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: default;
   position: relative;
   transition: background var(--transition-fast) var(--ease),
@@ -845,25 +777,52 @@ button.text-link {
     transform: translateY(-1px);
   }
   .calendar-cell.has-event:hover {
-    box-shadow: 0 2px 8px rgba(14, 159, 110, .18);
+    box-shadow: 0 3px 10px rgba(14, 159, 110, .22);
     transform: translateY(-1px);
+  }
+  .calendar-cell.today:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(14, 159, 110, .4);
   }
 }
 
+/* Event days — mint circular badge that reads at a glance */
 .calendar-cell.has-event {
+  min-height: 34px;
+  width: 34px;
+  height: 34px;
+  justify-self: center;
+  border-radius: 50%;
   background: var(--brand-100);
   color: var(--brand-700);
   font-weight: 700;
-  box-shadow: 0 1px 3px rgba(14,159,110,.08);
+  box-shadow: 0 1px 4px rgba(14,159,110,.12);
 }
 
+/* Today — solid emerald disc; a small white dot shows underneath when
+   today is also an event day */
 .calendar-cell.today {
-  outline: 2px solid var(--bs-primary);
-  outline-offset: -2px;
-  color: var(--brand-700);
+  min-height: 34px;
+  width: 34px;
+  height: 34px;
+  justify-self: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
   font-weight: 700;
-  background: rgba(14,159,110,.08);
-  box-shadow: 0 1px 4px rgba(14,159,110,.12);
+  box-shadow: 0 3px 10px rgba(14,159,110,.32);
+}
+
+.calendar-cell.today.has-event::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .9);
 }
 
 .calendar-cell.empty {
@@ -883,20 +842,33 @@ button.text-link {
 .calendar-key span {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
 }
 
+/* Legend swatches mirror the circular cell treatment */
 .calendar-dot,
 .calendar-today {
-  width: 7px;
-  height: 7px;
-  border-radius: 3px;
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
   background: var(--brand-100);
+  border: 1px solid var(--brand-300);
 }
 
 .calendar-today {
-  border: 1px solid var(--bs-primary);
-  background: var(--color-bg-card);
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+}
+
+/* Month label event summary */
+.calendar-month-count {
+  margin-left: 8px;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 /* Weather */
@@ -989,16 +961,6 @@ button.text-link {
   background: linear-gradient(135deg, #f0fbf6 0%, #e8f5ee 100%);
   border-color: var(--brand-200);
   position: relative;
-}
-
-.records-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--brand-400), var(--brand-600));
 }
 
 /* Inside highlights — darker green accents */
@@ -1192,16 +1154,6 @@ button.text-link {
   overflow: hidden;
 }
 
-.appeal-guide::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--brand-400), var(--brand-600));
-}
-
 .guide-icon {
   color: var(--brand-500);
   font-size: 2.2rem;
@@ -1251,7 +1203,7 @@ button.text-link {
 /* Student ID Card */
 .student-id-card {
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
 }
 
@@ -1539,11 +1491,8 @@ button.text-link {
   .student-sidebar { flex-basis: 196px; }
   .student-main { padding: 0 24px; }
 
-  .student-stat-grid,
   .dashboard-columns,
   .lower-columns { grid-template-columns: 1fr 1fr; }
-
-  .stat-card-featured { grid-column: 1 / -1; }
 }
 
 @media (max-width: 650px) {
@@ -1580,11 +1529,8 @@ button.text-link {
     padding-top: 28px;
   }
 
-  .student-stat-grid,
   .dashboard-columns,
   .lower-columns { grid-template-columns: 1fr; }
-
-  .stat-card-featured { grid-column: auto; }
 
   .attendance-chart { justify-content: center; gap: 20px; }
 

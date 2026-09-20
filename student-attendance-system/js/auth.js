@@ -8,12 +8,48 @@
    ============================================================ */
 
 /**
+ * Resolve the app's root folder from this script's own location.
+ * auth.js is always loaded as "<app-root>/js/auth.js", regardless of
+ * which subfolder the host page lives in — so the app root is simply
+ * the script's path with "/js/auth.js" stripped off. This keeps page
+ * redirects working now that role pages live in subfolders.
+ * @type {string} trailing-slash app root, e.g. ".../student-attendance-system/"
+ */
+var APP_BASE = (function () {
+  var scripts = document.getElementsByTagName('script');
+  var src = '';
+  for (var i = scripts.length - 1; i >= 0; i--) {
+    if (/\/js\/(auth|data)\.js$/.test(scripts[i].src)) { src = scripts[i].src; break; }
+  }
+  if (!src) src = scripts[scripts.length - 1] ? scripts[scripts.length - 1].src : '';
+  return src.slice(0, src.lastIndexOf('/js/')) + '/';
+})();
+
+/**
+ * Absolute URL of a key page inside the app. Role pages were
+ * reorganised into subfolders, so each dashboard lives one level
+ * under pages/. login and kiosk stay at the pages root.
+ * @param {'login'|'student'|'ssc-officer'|'admin'} role
+ * @returns {string}
+ */
+function pageUrl(role) {
+  var P = APP_BASE + 'pages/';
+  switch (role) {
+    case 'login':       return P + 'login.html';
+    case 'student':     return P + 'student/student-dashboard.html';
+    case 'ssc-officer': return P + 'ssc-officer/ssc-dashboard.html';
+    case 'admin':       return P + 'administrator/admin-dashboard.html';
+    default:            return P + 'login.html';
+  }
+}
+
+/**
  * Destroy the current session and return to the login page.
  * Called from every page's "Log out" button.
  */
 function logout() {
   clearSession();
-  window.location.href = 'login.html';
+  window.location.href = pageUrl('login');
 }
 
 /**
@@ -27,7 +63,7 @@ function logout() {
 function requireAuth(role = null) {
   const user = getCurrentUser();
   if (!user) {
-    window.location.href = 'login.html';
+    window.location.href = pageUrl('login');
     return null;
   }
 
@@ -37,9 +73,10 @@ function requireAuth(role = null) {
 
   if (role && !roleAllowed) {
     switch (user.role) {
-      case 'student':     window.location.href = 'student-dashboard.html'; break;
-      case 'ssc-officer': window.location.href = 'ssc-dashboard.html';    break;
-      default:            window.location.href = 'login.html';
+      case 'student':     window.location.href = pageUrl('student'); break;
+      case 'ssc-officer': window.location.href = pageUrl('ssc-officer'); break;
+      case 'admin':       window.location.href = pageUrl('admin'); break;
+      default:            window.location.href = pageUrl('login');
     }
     return null;
   }
@@ -55,7 +92,9 @@ function requireAuth(role = null) {
  */
 function loginWithCredentials(email, password) {
   const users = getUsers();
-  const user  = users.find(u => u.email === email && u.password === password);
+  // Stored passwords are SHA-256 digests (see data.js hashPassword); the typed
+  // password is hashed at compare time so plaintext never touches storage.
+  const user  = users.find(u => u.email === email && passwordMatches(password, u.password));
 
   if (!user) {
     showToast('error', 'Invalid email or password');
@@ -66,8 +105,9 @@ function loginWithCredentials(email, password) {
   showToast('success', 'Login successful! Redirecting...');
   setTimeout(() => {
     switch (user.role) {
-      case 'student':     window.location.href = 'student-dashboard.html'; break;
-      case 'ssc-officer': window.location.href = 'ssc-dashboard.html';    break;
+      case 'student':     window.location.href = pageUrl('student'); break;
+      case 'ssc-officer': window.location.href = pageUrl('ssc-officer'); break;
+      case 'admin':       window.location.href = pageUrl('admin'); break;
     }
   }, 700);
 }
@@ -115,61 +155,82 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ── Hero carousel ──
-  // Vanilla-JS autoplay with progress-bar indicators. The active
-  // indicator is an elongated pill whose fill bar animates
-  // left→right over the dwell time (heroProgressFill, 5s in CSS).
-  // The autoplay timer advances when the fill completes; hover pauses both.
+  // Story-style autoplay: one slim progress segment per slide. The active
+  // segment's fill animates empty→full over the dwell time (heroProgressFill,
+  // 5s linear) and its animationend drives the advance to the next slide, so
+  // the JS stays in lock-step with the CSS fill — no timer drift. Finished
+  // segments hold solid, upcoming ones show only a dim track, and hovering
+  // the hero pauses the current fill in place. Clicks and arrows restart the
+  // active segment's fill from empty.
   (function () {
+    const bgSlides      = document.querySelectorAll('.auth-hero-slide');
     const slideContents = document.querySelectorAll('.auth-hero-slide-content');
     const indicators    = document.querySelectorAll('.auth-hero-progress');
+    const indicatorsBox = document.querySelector('.auth-hero-indicators');
     const slideNum      = document.querySelector('.auth-hero-slide-num');
     const prevBtn       = document.getElementById('heroPrev');
     const nextBtn       = document.getElementById('heroNext');
     const hero          = document.querySelector('.auth-hero');
 
-    let current   = 0;
-    const total   = slideContents.length;
+    let current    = 0;
+    const total    = slideContents.length;
     const DWELL_MS = 5000; // keep in sync with heroProgressFill duration in auth.css
-    let autoTimer = null;
-    let isPaused  = false;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let autoTimer  = null; // reduced-motion fallback only
+    let isPaused   = false;
 
-    /** Sync indicator fills — the active one gets a restart. */
-    function setIndicatorFill(idx) {
-      indicators.forEach(function (ind, i) {
-        ind.classList.toggle('active', i === idx);
-        const fill = ind.querySelector('.auth-hero-progress-fill');
-        if (fill) {
-          fill.style.animation = 'none';
-          void fill.offsetWidth; // reflow to restart animation from 0
-          fill.style.animation = '';
-        }
-      });
+    /** Restart a segment's fill so it starts empty again. */
+    function restartFill(ind) {
+      const fill = ind.querySelector('.auth-hero-progress-fill');
+      if (!fill) return;
+      fill.style.animation = 'none';
+      void fill.offsetWidth; // reflow to restart the animation from 0
+      fill.style.animation = '';
     }
 
     /**
      * Advance to a specific slide. Wraps around at both ends.
      * @param {number} index
-     * @param {boolean} restart — true to reset the autoplay timer
+     * @param {boolean} restart — true to reset the autoplay timing
      */
     function goToSlide(index, restart) {
       if (index < 0) index = total - 1;
       if (index >= total) index = 0;
 
-      slideContents[current].classList.remove('active');
+      if (bgSlides[current]) bgSlides[current].classList.remove('active');
+      if (slideContents[current]) slideContents[current].classList.remove('active');
+
       current = index;
-      slideContents[current].classList.add('active');
-      setIndicatorFill(current);
+      if (bgSlides[current]) bgSlides[current].classList.add('active');
+      if (slideContents[current]) slideContents[current].classList.add('active');
+
+      indicators.forEach(function (ind, i) {
+        ind.classList.toggle('active', i === current);
+        ind.classList.toggle('done', i < current);
+      });
+      if (!reduceMotion) restartFill(indicators[current]);
+
       if (slideNum) slideNum.textContent = String(current + 1).padStart(2, '0');
       if (restart) startAuto();
+    }
+
+    function setPlayState(state) {
+      indicators.forEach(function (ind) {
+        ind.classList.toggle('paused', state === 'paused');
+        ind.classList.toggle('running', state === 'running');
+      });
     }
 
     function startAuto() {
       stopAuto();
       isPaused = false;
-      indicators.forEach(function (ind) { ind.classList.remove('paused'); ind.classList.add('running'); });
-      autoTimer = setInterval(function () {
-        if (!isPaused) goToSlide(current + 1, true);
-      }, DWELL_MS);
+      setPlayState('running');
+      // Reduced motion disables the CSS fill, so drive the advance with a timer.
+      if (reduceMotion) {
+        autoTimer = setInterval(function () {
+          if (!isPaused) goToSlide(current + 1, true);
+        }, DWELL_MS);
+      }
     }
 
     function stopAuto() {
@@ -177,27 +238,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function pauseAuto() {
-      if (autoTimer && !isPaused) {
-        isPaused = true;
-        indicators.forEach(function (ind) { ind.classList.remove('running'); ind.classList.add('paused'); });
-      }
+      if (isPaused) return;
+      isPaused = true;
+      setPlayState('paused');
     }
 
     function resumeAuto() {
-      if (autoTimer && isPaused) {
-        isPaused = false;
-        indicators.forEach(function (ind) { ind.classList.remove('paused'); ind.classList.add('running'); });
-      }
+      if (!isPaused) return;
+      isPaused = false;
+      setPlayState('running');
     }
 
-    // Indicator click → jump to slide
+    // Auto-advance fires when the active segment finishes filling.
+    if (indicatorsBox) {
+      indicatorsBox.addEventListener('animationend', function (e) {
+        if (e.animationName !== 'heroProgressFill') return;
+        if (!e.target.closest || !e.target.closest('.auth-hero-progress.active')) return;
+        if (isPaused || reduceMotion) return;
+        goToSlide(current + 1, true);
+      });
+    }
+
+    // Indicator click → jump to that slide directly and restart its fill.
+    // A brief pop on the target segment makes the jump land smoothly.
     indicators.forEach(function (ind) {
       ind.addEventListener('click', function () {
-        goToSlide(parseInt(ind.dataset.slide, 10), true);
+        const target = parseInt(ind.dataset.slide, 10);
+        if (target !== current && !reduceMotion) {
+          ind.classList.add('pop');
+          setTimeout(function () { ind.classList.remove('pop'); }, 300);
+        }
+        goToSlide(target, true);
       });
     });
 
-    // Arrow buttons
+    // Arrow buttons — reset the active segment's fill via goToSlide(restart)
     if (prevBtn) prevBtn.addEventListener('click', function () { goToSlide(current - 1, true); });
     if (nextBtn) nextBtn.addEventListener('click', function () { goToSlide(current + 1, true); });
 
@@ -207,7 +282,6 @@ document.addEventListener('DOMContentLoaded', function () {
       hero.addEventListener('mouseleave', resumeAuto);
     }
 
-    setIndicatorFill(current);
-    startAuto();
+    goToSlide(current, true);
   })();
 });

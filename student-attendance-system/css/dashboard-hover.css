@@ -1,0 +1,76 @@
+/* ════════════════════════════════════════════════════════════
+   DASHBOARD HOVER TOP-ACCENT BARS — dashboard-only variant.
+
+   Applied via the `dashboard-hover-accent` modifier class on the
+   three dashboard pages (Student / SSC / Admin). Overrides the
+   shared accent-bar rules (.stat-card, .dashboard-card,
+   .dash-panel, .activity-panel) so the top accent bar is a HOVER
+   REVEAL on dashboards: hidden at rest, flat solid green growing
+   in from center on hover, spanning the full card width and
+   curving into the rounded top corners.
+
+   EVERYTHING here is scoped to body.dashboard-hover-accent, so
+   non-dashboard pages keep whatever accent behavior their base
+   component rules already give them.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Bar shell shared by every bar-carrying dashboard card.
+   Flat solid green — no gradient, no glow. Hidden at rest. ── */
+.dashboard-hover-accent .stat-card::before,
+.dashboard-hover-accent .dashboard-card::before,
+.dashboard-hover-accent .dash-panel::before,
+.dashboard-hover-accent .activity-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--brand-500);
+  opacity: 0;
+  transform: scaleX(.15);
+  transform-origin: center;
+  transition: opacity 200ms ease-out,
+              transform 240ms ease-out;
+}
+
+/* ── Bar hugs each card type's own rounded top corners ── */
+.dashboard-hover-accent .stat-card::before {
+  border-radius: var(--stat-radius) var(--stat-radius) 0 0;
+}
+
+.dashboard-hover-accent .dashboard-card::before,
+.dashboard-hover-accent .dash-panel::before,
+.dashboard-hover-accent .activity-panel::before {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* ── Hover: fade the solid full-width bar in ── */
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-hover-accent .stat-card:hover::before,
+  .dashboard-hover-accent .dashboard-card:hover::before,
+  .dashboard-hover-accent .dash-panel:hover::before,
+  .dashboard-hover-accent .activity-panel:hover::before {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+
+
+/* ── Reduced motion: fade in place, no scale grow ── */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-hover-accent .stat-card::before,
+  .dashboard-hover-accent .dashboard-card::before,
+  .dashboard-hover-accent .dash-panel::before,
+  .dashboard-hover-accent .activity-panel::before {
+    transition: none;
+  }
+
+  .dashboard-hover-accent .stat-card:hover::before,
+  .dashboard-hover-accent .dashboard-card:hover::before,
+  .dashboard-hover-accent .dash-panel:hover::before,
+  .dashboard-hover-accent .activity-panel:hover::before {
+    transform: none;
+  }
+}

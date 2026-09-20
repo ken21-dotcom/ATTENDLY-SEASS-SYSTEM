@@ -14,7 +14,7 @@
 </head>
 <body class="kiosk-page">
 
-  <!-- Top command bar: venue brand, event selector, live clock -->
+  <!-- ─── Top command bar ─── -->
   <header class="kiosk-topbar">
     <div class="kiosk-topbar-inner">
       <div class="kiosk-brand">
@@ -35,7 +35,7 @@
     </div>
   </header>
 
-  <!-- Main stage: scanner plus result overlay -->
+  <!-- ─── Main stage ─── -->
   <main class="kiosk-stage">
     <div class="kiosk-stage-inner">
 
@@ -46,23 +46,36 @@
         <div class="kiosk-heading">
           <span class="kiosk-kicker"><i class="bi bi-lightning-charge-fill"></i> Touch-free check-in</span>
           <h1 class="kiosk-title" id="kioskEventName">Select an event to<br>begin check-in</h1>
-          <p class="kiosk-subtitle" id="kioskEventMeta">Place your finger on the scanner when prompted.</p>
+          <p class="kiosk-subtitle" id="kioskEventMeta"></p>
+          <p class="kiosk-countdown" id="kioskCountdown" hidden aria-live="polite"></p>
         </div>
 
-        <!-- Scanner ring + status readout -->
+        <!-- Scanner ring + scan button + status readout -->
         <div class="kiosk-scanner" id="kioskScanner" data-state="idle">
           <div class="kiosk-scanner-ring">
             <div class="kiosk-scanner-ring-ghost"></div>
+            <div class="kiosk-scanner-ring-scanline" aria-hidden="true"></div>
             <i class="bi bi-fingerprint kiosk-scanner-icon" aria-hidden="true"></i>
           </div>
 
-          <div class="kiosk-scanner-status">
-            <span class="kiosk-status-dot" aria-hidden="true"></span>
-            <span class="kiosk-status-text" id="kioskStatusText">Waiting for scan</span>
+          <button class="kiosk-scan-button" id="kioskScanBtn" type="button" aria-label="Tap to scan fingerprint">
+            <i class="bi bi-fingerprint"></i>
+            <span>Tap to scan</span>
+          </button>
+
+          <div class="kiosk-status-bar" id="kioskStatusBar" role="status" aria-live="polite">
+            <div class="kiosk-status-main">
+              <span class="kiosk-status-dot" aria-hidden="true"></span>
+              <span class="kiosk-status-text" id="kioskStatusText">Waiting for scan</span>
+            </div>
+            <div class="kiosk-status-hint" id="kioskScanHint">Place your finger on the reader to check in.</div>
           </div>
-          <div class="kiosk-scan-hint" id="kioskScanHint">Place your finger on the reader to check in.</div>
         </div>
 
+        <!-- Status badge floating on card -->
+        <span class="kiosk-status-badge" id="kioskStatusBadge">Upcoming</span>
+
+        <!-- Live counts — 3 tiles: checked in / enrolled / attendance % -->
         <div class="kiosk-counts">
           <div class="kiosk-count">
             <span class="kiosk-count-num" id="kioskCount">0</span>
@@ -70,16 +83,22 @@
           </div>
           <div class="kiosk-count">
             <span class="kiosk-count-num" id="kioskListCount">0</span>
-            <span class="kiosk-count-label">Students enrolled</span>
+            <span class="kiosk-count-label">Enrolled</span>
           </div>
-          <div class="kiosk-count">
-            <span class="kiosk-count-num kiosk-count-cancelled" id="kioskStatusChip">Live</span>
-            <span class="kiosk-count-label">Event status</span>
+          <div class="kiosk-count kiosk-count-pct">
+            <span class="kiosk-count-num" id="kioskAttendancePct">0%</span>
+            <span class="kiosk-count-label">Attendance</span>
           </div>
         </div>
       </section>
 
-      <!-- ══ MANUAL OVERRIDE (collapsible, touch friendly) ══ -->
+      <!-- ══ RECENT CHECK-INS TICKER ══ -->
+      <section class="kiosk-ticker" id="kioskTicker" hidden>
+        <div class="kiosk-ticker-label"><i class="bi bi-clock-history"></i> Recent check-ins</div>
+        <div class="kiosk-ticker-list" id="kioskTickerList"></div>
+      </section>
+
+      <!-- ══ MANUAL OVERRIDE ══ -->
       <section class="kiosk-manual" id="manualPanel">
         <button class="kiosk-manual-toggle" id="manualToggle" aria-expanded="false" aria-controls="manualBody" type="button">
           <i class="bi bi-keyboard"></i> Manual entry
@@ -95,10 +114,12 @@
         </div>
       </section>
 
-      <!-- ══ RESULT OVERLAY — filled by JS ══ -->
+      <!-- ══ RESULT OVERLAY ══ -->
       <section class="kiosk-result-overlay" id="resultOverlay" hidden aria-live="assertive">
         <div class="kiosk-result-card" id="resultCard">
-          <i class="bi kiosk-result-icon" id="resultIcon"></i>
+          <div class="kiosk-result-icon-wrap" id="resultIconWrap">
+            <i class="bi kiosk-result-icon" id="resultIcon"></i>
+          </div>
           <h2 class="kiosk-result-title" id="resultTitle">Checked in</h2>
           <p class="kiosk-result-message" id="resultMessage">You're all set.</p>
           <p class="kiosk-result-meta" id="resultMeta">&nbsp;</p>
@@ -109,7 +130,20 @@
     </div>
   </main>
 
+  <!-- ─── Brand footer strip ─── -->
+  <footer class="kiosk-footer">
+    <div class="kiosk-footer-inner">
+      <span class="kiosk-footer-brand">ATTENDLY <span class="kiosk-footer-dot">·</span> Event Check-in</span>
+      <span class="kiosk-footer-note">Biometric recording on this station</span>
+    </div>
+  </footer>
+
   <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 2000;"></div>
+
+  <!-- Theme toggle FAB -->
+  <button class="kiosk-theme-fab" data-theme-toggle aria-label="Toggle theme" type="button">
+    <i class="bi bi-moon" data-theme-icon></i>
+  </button>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../js/data.js"></script>

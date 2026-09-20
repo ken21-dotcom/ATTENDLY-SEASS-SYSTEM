@@ -89,6 +89,9 @@
   --bs-warning-text-emphasis: #e5b53c;
   --bs-danger-bg: #2a1416;
   --bs-danger-text-emphasis: #ef8288;
+
+  /* Accent line glow — dark variant of the shared ::root token */
+  --accent-glow: linear-gradient(90deg, transparent, rgba(79, 206, 159, .85) 50%, transparent);
 }
 
 [data-theme="dark"] body {
@@ -105,7 +108,6 @@
 [data-theme="dark"] .dashboard-card,
 [data-theme="dark"] .student-table,
 [data-theme="dark"] .role-action-card,
-[data-theme="dark"] .admin-stat-card,
 [data-theme="dark"] .dash-panel,
 [data-theme="dark"] .activity-panel,
 [data-theme="dark"] .kiosk-card,
@@ -115,26 +117,9 @@
   box-shadow: var(--shadow-card);
 }
 
-[data-theme="dark"] .dashboard-card::before {
-  opacity: 0;
-}
-
 [data-theme="dark"] .dashboard-card:hover {
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: var(--shadow-card-hover), 0 1px 8px rgba(79, 206, 159, .14);
   border-color: #2a3f33;
-}
-
-[data-theme="dark"] .dashboard-card:hover::before {
-  opacity: 1;
-}
-
-[data-theme="dark"] .stat-card-featured {
-  background: linear-gradient(135deg, #111c16 0%, #0f2419 100%);
-  border-color: #1d3529;
-}
-
-[data-theme="dark"] .stat-card-featured::before {
-  background: radial-gradient(circle, rgba(79, 206, 159, .04) 0%, transparent 70%);
 }
 
 [data-theme="dark"] .stat-value,
@@ -207,23 +192,11 @@
   border-color: #1d3529;
 }
 
-[data-theme="dark"] .records-card::before {
-  background: linear-gradient(90deg, var(--brand-400), var(--brand-500), var(--brand-600));
-}
-
 [data-theme="dark"] .records-card .card-heading h2 {
   color: var(--brand-400);
 }
 
 [data-theme="dark"] .card { background: var(--color-bg-card); }
-
-[data-theme="dark"] .progress-track {
-  background: linear-gradient(90deg, #1d2d24 0%, #19261e 100%);
-}
-
-[data-theme="dark"] .progress-track span {
-  box-shadow: 0 1px 4px rgba(32, 180, 134, .25);
-}
 
 [data-theme="dark"] .donut-chart::before { background: var(--color-bg-card); }
 
@@ -233,6 +206,7 @@
 }
 
 [data-theme="dark"] .calendar-cell { color: #b7c6bd; }
+[data-theme="dark"] .calendar-cell.today { color: #fff; }
 
 /* Calendar key — dark mode */
 [data-theme="dark"] .calendar-key {
@@ -341,9 +315,10 @@
 
 [data-theme="dark"] .announcement-icon { background: var(--color-bg-success-light); }
 
-[data-theme="dark"] .calendar-cell.has-event {
-  background: #0f2419;
-  color: #4fce9f;
+[data-theme="dark"] .calendar-cell.has-event:not(.today) {
+  background: #12301f;
+  color: #62d9ab;
+  box-shadow: 0 1px 4px rgba(0,0,0,.25);
 }
 
 /* Student ID card — dark mode */
@@ -420,8 +395,8 @@
 }
 
 /* Calendar markers */
-[data-theme="dark"] .calendar-today { background: var(--color-bg-input); }
-[data-theme="dark"] .calendar-dot { background: var(--color-bg-success-light); }
+[data-theme="dark"] .calendar-today { background: var(--brand-500); border-color: var(--brand-500); }
+[data-theme="dark"] .calendar-dot { background: #2f6b4f; border-color: #2f6b4f; }
 
 /* Announcements & donut chart */
 [data-theme="dark"] .announcement-icon.event-icon {
@@ -432,7 +407,7 @@
 [data-theme="dark"] .chart-legend > div { color: var(--color-text-muted); }
 [data-theme="dark"] .chart-legend strong { color: var(--color-text-heading); }
 [data-theme="dark"] .donut-chart small { color: var(--color-text-muted); }
-[data-theme="dark"] .stat-heading i,
+[data-theme="dark"] .stat-icon,
 [data-theme="dark"] .card-menu { color: var(--color-text-muted); }
 
 /* Forms & biometrics */
@@ -497,8 +472,7 @@
 
 /* Muted secondary text on cards */
 [data-theme="dark"] .intro-copy,
-[data-theme="dark"] .stat-heading,
-[data-theme="dark"] .stat-card small,
+[data-theme="dark"] .stat-foot,
 [data-theme="dark"] .chart-caption,
 [data-theme="dark"] .calendar-weekdays,
 [data-theme="dark"] .calendar-key,
@@ -680,10 +654,18 @@
 /* ========================================
    Kiosk page — dark mode
    ======================================== */
+
+/* Glassy topbar + footer get dark glass surfaces */
 :root:not([data-theme="light"]) .kiosk-topbar,
 :root[data-theme="dark"] .kiosk-topbar {
-  background: rgba(13, 26, 21, .86);
+  background: rgba(10, 20, 16, .72);
   border-bottom-color: var(--color-border-sidebar);
+}
+
+:root:not([data-theme="light"]) .kiosk-footer,
+:root[data-theme="dark"] .kiosk-footer {
+  background: rgba(10, 20, 16, .6);
+  border-top-color: var(--color-border-sidebar);
 }
 
 :root:not([data-theme="light"]) .kiosk-event-select,
@@ -724,6 +706,70 @@
 :root:not([data-theme="light"]) .kiosk-result-overlay,
 :root[data-theme="dark"] .kiosk-result-overlay {
   background: rgba(3, 8, 6, .62);
+}
+
+/* Gold accents — brighter on dark so they stay visible */
+:root:not([data-theme="light"]) .kiosk-page,
+:root[data-theme="dark"] .kiosk-page {
+  --kiosk-gold: #e0c468;
+  --kiosk-gold-light: #f5ecc8;
+  --kiosk-gold-muted: rgba(224, 196, 104, .12);
+}
+
+/* Recent check-ins ticker */
+:root:not([data-theme="light"]) .kiosk-ticker,
+:root[data-theme="dark"] .kiosk-ticker {
+  background: var(--color-bg-card);
+  border-color: var(--color-border-default);
+}
+:root:not([data-theme="light"]) .kiosk-ticker-label,
+:root[data-theme="dark"] .kiosk-ticker-label {
+  color: var(--color-text-muted);
+  border-bottom-color: var(--color-border-default);
+}
+:root:not([data-theme="light"]) .kiosk-ticker-item,
+:root[data-theme="dark"] .kiosk-ticker-item {
+  border-bottom-color: var(--color-border-table);
+}
+:root:not([data-theme="light"]) .kiosk-ticker-avatar,
+:root[data-theme="dark"] .kiosk-ticker-avatar {
+  background: var(--color-bg-success-light);
+  border-color: rgba(32, 180, 134, .25);
+  color: var(--color-text-success);
+}
+:root:not([data-theme="light"]) .kiosk-ticker-name,
+:root[data-theme="dark"] .kiosk-ticker-name {
+  color: var(--color-text-heading);
+}
+
+/* Theme fab — dark glass */
+:root:not([data-theme="light"]) .kiosk-theme-fab,
+:root[data-theme="dark"] .kiosk-theme-fab {
+  background: rgba(19, 29, 24, .7);
+  border-color: rgba(255, 255, 255, .1);
+  color: var(--color-text-muted);
+}
+@media (hover: hover) and (pointer: fine) {
+  :root:not([data-theme="light"]) .kiosk-theme-fab:hover,
+  :root[data-theme="dark"] .kiosk-theme-fab:hover {
+    background: rgba(30, 46, 38, .9);
+    border-color: rgba(255, 255, 255, .2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+    color: var(--color-text-heading);
+  }
+}
+
+/* Scan button — brighter emerald on dark */
+:root:not([data-theme="light"]) .kiosk-scan-button,
+:root[data-theme="dark"] .kiosk-scan-button {
+  background: linear-gradient(135deg, #20b486 0%, #0e9f6e 100%);
+  border-color: #20b486;
+}
+@media (hover: hover) and (pointer: fine) {
+  :root:not([data-theme="light"]) .kiosk-scan-button:hover,
+  :root[data-theme="dark"] .kiosk-scan-button:hover {
+    background: linear-gradient(135deg, #2cc493 0%, #14a97a 100%);
+  }
 }
 
 /* ========================================
