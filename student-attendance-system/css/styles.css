@@ -31,6 +31,9 @@
 /* 7. Auth / Login Page */
 @import './auth.css';
 
+/* 8. Cross-role responsive and visual refinements */
+@import './frontend-refresh.css';
+
 /* ========================================
    Additional page-specific styles can be
    added here as needed (e.g., auth pages,

@@ -188,6 +188,44 @@ document.addEventListener('DOMContentLoaded', function () {
       fill.style.animation = '';
     }
 
+    /** Animate the two-digit slide counter instead of replacing its wrapper. */
+    function updateSlideNumber(index) {
+      if (!slideNum) return;
+      const nextValue = String(index + 1).padStart(2, '0');
+      const currentNumber = slideNum.querySelector('.auth-hero-slide-num-inner.current');
+      if (currentNumber && currentNumber.textContent === nextValue) return;
+
+      slideNum.querySelectorAll('.auth-hero-slide-num-inner:not(.current)').forEach(function (number) {
+        number.remove();
+      });
+
+      if (reduceMotion) {
+        slideNum.innerHTML = `<span class="auth-hero-slide-num-inner current">${nextValue}</span>`;
+        return;
+      }
+
+      if (currentNumber) {
+        currentNumber.classList.remove('current');
+        currentNumber.classList.add('exit-up');
+      }
+
+      const nextNumber = document.createElement('span');
+      nextNumber.className = 'auth-hero-slide-num-inner enter-down';
+      nextNumber.textContent = nextValue;
+      slideNum.appendChild(nextNumber);
+
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          nextNumber.classList.remove('enter-down');
+          nextNumber.classList.add('current');
+        });
+      });
+
+      window.setTimeout(function () {
+        if (currentNumber) currentNumber.remove();
+      }, 460);
+    }
+
     /**
      * Advance to a specific slide. Wraps around at both ends.
      * @param {number} index
@@ -207,10 +245,12 @@ document.addEventListener('DOMContentLoaded', function () {
       indicators.forEach(function (ind, i) {
         ind.classList.toggle('active', i === current);
         ind.classList.toggle('done', i < current);
+        if (i === current) ind.setAttribute('aria-current', 'step');
+        else ind.removeAttribute('aria-current');
       });
       if (!reduceMotion) restartFill(indicators[current]);
 
-      if (slideNum) slideNum.textContent = String(current + 1).padStart(2, '0');
+      updateSlideNumber(current);
       if (restart) startAuto();
     }
 

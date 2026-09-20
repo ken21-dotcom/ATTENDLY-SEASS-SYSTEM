@@ -759,16 +759,16 @@
   }
 }
 
-/* Scan button — brighter emerald on dark */
+/* The redesigned scan button wraps the sensor itself; keep its canvas clear. */
 :root:not([data-theme="light"]) .kiosk-scan-button,
 :root[data-theme="dark"] .kiosk-scan-button {
-  background: linear-gradient(135deg, #20b486 0%, #0e9f6e 100%);
-  border-color: #20b486;
+  background: transparent;
+  border-color: transparent;
 }
 @media (hover: hover) and (pointer: fine) {
   :root:not([data-theme="light"]) .kiosk-scan-button:hover,
   :root[data-theme="dark"] .kiosk-scan-button:hover {
-    background: linear-gradient(135deg, #2cc493 0%, #14a97a 100%);
+    background: transparent;
   }
 }
 

@@ -28,6 +28,8 @@
   let els = {};
   let currentEventId = null;
   let busy = false; // true while a scan is in flight — blocks input
+  const CHECKIN_EARLY_MS = 30 * 60 * 1000;
+  const CHECKIN_WINDOW_MS = 6 * 60 * 60 * 1000;
 
   // ── Event loading ──
   function loadKioskEvents() {
@@ -53,32 +55,44 @@
   function renderEventHeader() {
     const event = getEvents().find((e) => e.id === currentEventId);
     if (!event) {
-      els.eventName.innerHTML = 'No event selected.';
+      els.eventName.textContent = 'Select an event to begin';
       els.eventMeta.textContent = 'Create an event in the SSC dashboard, then return here.';
+      els.statusChip.textContent = 'No event';
+      els.statusChip.className = 'kiosk-status-badge is-closed';
+      setScanAvailability(false, 'Select an event', 'Choose an active event first.');
       hideCountdown();
       return;
     }
-    // Live vs scheduled vs cancelled
-    const isToday = event.date === todayStr();
-    els.eventName.innerHTML = `${escapeHtml(event.name)}<br>`;
 
-    const parts = [`${formatDate(event.date)} · ${escapeHtml(event.time)}`];
-    if (event.location) parts.push(escapeHtml(event.location));
+    const phase = getEventPhase(event);
+    els.eventName.textContent = event.name;
+
+    const parts = [`${formatDate(event.date)} · ${event.time}`];
+    if (event.location) parts.push(event.location);
     if (event.mandatory) parts.push('Mandatory');
     else parts.push('Optional');
     els.eventMeta.textContent = parts.join(' · ');
 
     const statusChip = els.statusChip;
-    statusChip.classList.remove('is-cancelled', 'is-live', 'is-upcoming');
-    if (event.status === 'cancelled') {
-      statusChip.textContent = 'Cancelled';
-      statusChip.classList.add('is-cancelled');
-      hideCountdown();
-    } else {
-      statusChip.textContent = isToday ? 'Live now' : 'Upcoming';
-      statusChip.classList.add(isToday ? 'is-live' : 'is-upcoming');
-      renderCountdown(event, isToday);
+    statusChip.className = 'kiosk-status-badge is-' + phase;
+    statusChip.textContent = phase === 'live' ? 'Check-in open'
+      : phase === 'upcoming' ? 'Upcoming'
+      : phase === 'cancelled' ? 'Cancelled'
+      : 'Closed';
+
+    setScanAvailability(
+      phase === 'live',
+      phase === 'live' ? 'Touch to scan' : phase === 'upcoming' ? 'Check-in opens soon' : 'Check-in unavailable',
+      phase === 'live' ? 'Fingerprint reader ready' : phase === 'upcoming' ? 'Please wait for the check-in window.' : 'Choose another active event.'
+    );
+    if (!busy) {
+      setStatus(
+        'idle',
+        phase === 'live' ? 'Ready for check-in' : phase === 'upcoming' ? 'Check-in not open yet' : 'Check-in unavailable',
+        phase === 'live' ? 'Place one finger flat on the reader.' : phase === 'upcoming' ? 'This station will unlock when check-in opens.' : 'Choose another active event.'
+      );
     }
+    renderCountdown(event, phase);
   }
 
   // ── Live countdown (updates every 20s) ──
@@ -87,32 +101,43 @@
     els.countdown.innerHTML = '';
   }
 
-  function renderCountdown(event, isToday) {
-    const el = els.countdown;
-    el.hidden = false;
-    // Event time parsed as local time ("HH:MM" on the event's date).
+  function getEventPhase(event) {
+    if (!event || event.status === 'cancelled') return 'cancelled';
+    if (event.status === 'completed') return 'closed';
     const start = parseEventDateTime(event.date, event.time);
     const now = new Date();
-    let diff = start - now; // ms until start (negative => already started)
+    if (now < start - CHECKIN_EARLY_MS) return 'upcoming';
+    if (now > start.getTime() + CHECKIN_WINDOW_MS) return 'closed';
+    return 'live';
+  }
 
-    // Events scheduled on a future day are shown as a day countdown.
-    if (!isToday) {
+  function setScanAvailability(enabled, title, detail) {
+    els.scanBtn.disabled = !enabled;
+    els.scanBtn.setAttribute('aria-label', title);
+    if (els.scanCtaTitle) els.scanCtaTitle.textContent = title;
+    if (els.scanCtaDetail) els.scanCtaDetail.textContent = detail;
+    if (els.manualInput) els.manualInput.disabled = !enabled;
+    if (els.manualSubmit) els.manualSubmit.disabled = !enabled;
+  }
+
+  function renderCountdown(event, phase) {
+    const el = els.countdown;
+    el.hidden = false;
+    const start = parseEventDateTime(event.date, event.time);
+    const now = new Date();
+
+    if (phase === 'cancelled') {
+      el.innerHTML = '<i class="bi bi-x-circle"></i> This event has been cancelled';
+    } else if (phase === 'closed') {
+      el.innerHTML = '<i class="bi bi-lock"></i> Check-in window has closed';
+    } else if (phase === 'upcoming') {
+      const diff = Math.max(0, start - CHECKIN_EARLY_MS - now);
       const days = Math.ceil(diff / 86400000);
-      el.innerHTML = `<i class="bi bi-hourglass-split"></i> Starts in ${days > 1 ? days + ' days' : '1 day'}`;
-      return;
-    }
-
-    if (diff > 0) {
-      el.innerHTML = `<i class="bi bi-hourglass-split"></i> Starts in ${formatCountdown(diff)}`;
+      const label = diff > 86400000 ? (days + (days === 1 ? ' day' : ' days')) : formatCountdown(diff);
+      el.innerHTML = `<i class="bi bi-hourglass-split"></i> Check-in opens in ${label}`;
     } else {
-      // Live: show how long until the event window closes (assume 90 min).
-      const close = start + 90 * 60 * 1000;
-      const remaining = close - now;
-      if (remaining > 0) {
-        el.innerHTML = `<i class="bi bi-broadcast"></i> Live now · closes in ${formatCountdown(remaining)}`;
-      } else {
-        el.innerHTML = `<i class="bi bi-check-circle"></i> Check-in window has closed`;
-      }
+      const remaining = start.getTime() + CHECKIN_WINDOW_MS - now;
+      el.innerHTML = `<i class="bi bi-broadcast"></i> Open now · closes in ${formatCountdown(remaining)}`;
     }
   }
 
@@ -190,12 +215,15 @@
   function setStatus(state, text, hint) {
     const scanner = els.scanner;
     scanner.dataset.state = state;
+    scanner.setAttribute('aria-busy', String(state === 'scanning' || state === 'processing'));
     if (text !== undefined) els.statusText.textContent = text;
     if (hint !== undefined) els.scanHint.textContent = hint;
   }
 
   // ── Recording attendance (FR-005/006, BR-007/008) ──
   function recordAttendance(student) {
+    const event = getEvents().find((item) => item.id === currentEventId);
+    if (getEventPhase(event) !== 'live') return 'unavailable';
     const attendance = getAttendance();
     const already = attendance.some((a) => a.studentId === student.id && a.eventId === currentEventId);
     if (already) return 'duplicate';
@@ -247,6 +275,10 @@
       showResult('no-event', 'No event selected', 'Choose an event before scanning.', '');
       return;
     }
+    if (getEventPhase(event) !== 'live') {
+      showResult('no-event', 'Check-in unavailable', 'This event is not accepting check-ins right now.', 'Choose an event marked “Check-in open”.');
+      return;
+    }
 
     busy = true;
     setStatus('scanning', 'Scanning…', 'Place your finger on the reader and hold it there.');
@@ -270,13 +302,18 @@
       }
 
       const outcome = recordAttendance(student);
+      if (outcome === 'unavailable') {
+        showResult('no-event', 'Check-in unavailable', 'This event is not accepting check-ins right now.', 'Choose an event marked “Check-in open”.');
+        setStatus('attention', 'Check-in unavailable', 'Choose another active event.');
+        return;
+      }
       if (outcome === 'duplicate') {
-        showResult('already', 'Already checked in', `${escapeHtml(student.name)} is already present for this event.`, '');
+        showResult('already', 'Already checked in', `${student.name} is already present for this event.`, '');
         setStatus('attention', 'Already checked in', 'No action needed.');
       } else {
         showResult(
           'success',
-          `Welcome, ${escapeHtml(student.name.split(' ')[0])}!`,
+          `Welcome, ${student.name.split(' ')[0]}!`,
           'Attendance recorded.',
           `<strong>${escapeHtml(event.name)}</strong> · ${new Date().toLocaleTimeString()}`
         );
@@ -304,6 +341,10 @@
     const id = (rawId || '').trim();
     const event = getEvents().find((e) => e.id === currentEventId);
     if (!event || !id) return;
+    if (getEventPhase(event) !== 'live') {
+      showToast('warning', 'This event is not accepting check-ins right now.');
+      return;
+    }
 
     const student = getUsers().find((u) => u.role === 'student' && (u.id === id || u.email === id));
     if (!student) {
@@ -312,16 +353,16 @@
     }
     const outcome = recordAttendance(student);
     if (outcome === 'duplicate') {
-      showToast('warning', `${escapeHtml(student.name)} is already checked in.`);
-      showResult('already', 'Already checked in', `${escapeHtml(student.name)} is already present for this event.`, '');
+      showToast('warning', `${student.name} is already checked in.`);
+      showResult('already', 'Already checked in', `${student.name} is already present for this event.`, '');
     } else {
       showResult(
         'success',
-        `Welcome, ${escapeHtml(student.name.split(' ')[0])}!`,
+        `Welcome, ${student.name.split(' ')[0]}!`,
         'Manual attendance recorded.',
         `<strong>${escapeHtml(event.name)}</strong> · ${new Date().toLocaleTimeString()}`
       );
-      showToast('success', `${escapeHtml(student.name)} checked in.`);
+      showToast('success', `${student.name} checked in.`);
       updateCounts();
       renderTicker();
     }
@@ -350,6 +391,8 @@
       statusText:   $('kioskStatusText'),
       scanHint:     $('kioskScanHint'),
       scanBtn:      $('kioskScanBtn'),
+      scanCtaTitle: document.querySelector('.kiosk-scan-cta strong'),
+      scanCtaDetail: document.querySelector('.kiosk-scan-cta small'),
       count:        $('kioskCount'),
       listCount:    $('kioskListCount'),
       attendancePct: $('kioskAttendancePct'),
@@ -366,6 +409,8 @@
       manualBody:   $('manualBody'),
       manualForm:   $('kioskManualForm'),
       manualId:     $('manualStudentId'),
+      manualInput:  $('manualStudentId'),
+      manualSubmit: document.querySelector('#kioskManualForm button[type="submit"]'),
       clockTime:    $('kioskClockTime'),
       clockDate:    $('kioskClockDate')
     };
@@ -379,13 +424,8 @@
       renderTicker();
     });
 
-    // The scanner ring AND the explicit scan button both trigger a scan.
-    els.scanner.addEventListener('click', () => {
-      if (!busy) runFingerprintScan();
-    });
     if (els.scanBtn) {
       els.scanBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
         if (!busy) runFingerprintScan();
       });
     }
@@ -411,6 +451,7 @@
       els.resultDone.addEventListener('click', () => {
         els.resultOverlay.hidden = true;
         setStatus('idle', 'Waiting for scan', 'Place your finger on the reader to check in.');
+        els.scanBtn.focus();
       });
     }
 
