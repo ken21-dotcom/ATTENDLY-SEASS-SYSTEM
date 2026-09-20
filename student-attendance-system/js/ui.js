@@ -93,7 +93,115 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
     btn.addEventListener('click', toggleTheme);
   });
+
+  initResponsiveShell();
 });
+
+/**
+ * Turn the shared workspace sidebar into an accessible off-canvas drawer on
+ * small screens. Markup is added here so every student, SSC, and administrator
+ * page gets the same navigation without duplicating controls across 21 files.
+ */
+function initResponsiveShell() {
+  const sidebar = document.querySelector('.app-sidebar, .role-sidebar, .student-sidebar');
+  const topbar = document.querySelector('.app-topbar, .role-topbar, .student-topbar');
+  if (!sidebar || !topbar || topbar.querySelector('.app-mobile-menu-toggle')) return;
+
+  const mobileQuery = window.matchMedia('(max-width: 720px)');
+  const sidebarId = sidebar.id || 'workspace-navigation';
+  sidebar.id = sidebarId;
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'icon-button app-mobile-menu-toggle';
+  toggle.setAttribute('aria-label', 'Open navigation');
+  toggle.setAttribute('aria-controls', sidebarId);
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.innerHTML = '<i class="bi bi-list" aria-hidden="true"></i>';
+  topbar.prepend(toggle);
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'icon-button app-drawer-close';
+  closeButton.setAttribute('aria-label', 'Close navigation');
+  closeButton.innerHTML = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
+  sidebar.prepend(closeButton);
+
+  const backdrop = document.createElement('button');
+  backdrop.type = 'button';
+  backdrop.className = 'app-nav-backdrop';
+  backdrop.setAttribute('aria-label', 'Close navigation');
+  backdrop.hidden = true;
+  sidebar.insertAdjacentElement('afterend', backdrop);
+
+  let restoreFocus = false;
+
+  function setDrawer(open, options) {
+    const shouldOpen = Boolean(open && mobileQuery.matches);
+    const settings = options || {};
+
+    sidebar.classList.toggle('is-open', shouldOpen);
+    backdrop.classList.toggle('is-visible', shouldOpen);
+    backdrop.hidden = !shouldOpen;
+    document.body.classList.toggle('nav-drawer-open', shouldOpen);
+    toggle.setAttribute('aria-expanded', String(shouldOpen));
+    toggle.setAttribute('aria-label', shouldOpen ? 'Close navigation' : 'Open navigation');
+    toggle.querySelector('i').className = shouldOpen ? 'bi bi-x-lg' : 'bi bi-list';
+
+    if (mobileQuery.matches) {
+      sidebar.inert = !shouldOpen;
+      sidebar.setAttribute('aria-hidden', String(!shouldOpen));
+    } else {
+      sidebar.inert = false;
+      sidebar.removeAttribute('aria-hidden');
+    }
+
+    if (shouldOpen) {
+      restoreFocus = true;
+      const activeLink = sidebar.querySelector('a.active') || sidebar.querySelector('a, button');
+      if (activeLink) {
+        window.setTimeout(() => {
+          if (toggle.getAttribute('aria-expanded') === 'true') activeLink.focus();
+        }, 80);
+      }
+    } else if (settings.returnFocus && restoreFocus) {
+      restoreFocus = false;
+      toggle.focus();
+    }
+  }
+
+  toggle.addEventListener('click', () => {
+    setDrawer(toggle.getAttribute('aria-expanded') !== 'true', { returnFocus: true });
+  });
+  closeButton.addEventListener('click', () => setDrawer(false, { returnFocus: true }));
+  backdrop.addEventListener('click', () => setDrawer(false, { returnFocus: true }));
+  sidebar.addEventListener('click', event => {
+    if (event.target.closest('a')) setDrawer(false);
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+      setDrawer(false, { returnFocus: true });
+      return;
+    }
+
+    if (event.key === 'Tab' && toggle.getAttribute('aria-expanded') === 'true') {
+      const focusable = Array.from(sidebar.querySelectorAll('a[href], button:not([disabled])'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+  mobileQuery.addEventListener('change', () => setDrawer(false));
+
+  setDrawer(false);
+}
 
 
 /* ============================================================
