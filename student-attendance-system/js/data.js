@@ -50,13 +50,17 @@ const DEFAULT_SANCTION_POLICY = Object.freeze({
 const DEPARTMENTS = Object.freeze([
   'School of Computing Studies',
   'School of Nursing',
-  'School of Business Management',
+  'School of Business and Administration',
 ]);
 
 const COURSES_BY_DEPARTMENT = Object.freeze({
-  'School of Computing Studies':   ['BSIT'],
-  'School of Nursing':             ['BSN'],
-  'School of Business Management': ['BSEntrep', 'BSHM', 'BSTM'],
+  'School of Computing Studies': ['BSIT – Bachelor of Science in Information Technology'],
+  'School of Nursing': ['BSN – Bachelor of Science in Nursing'],
+  'School of Business and Administration': [
+    'BSE – Bachelor of Science in Entrepreneurship',
+    'BSHM – Bachelor of Science in Hospitality Management',
+    'BSTM – Bachelor of Science in Tourism Management',
+  ],
 });
 
 const YEAR_LEVELS = Object.freeze(['1', '2', '3', '4']);
@@ -160,6 +164,44 @@ function passwordMatches(plain, stored) {
 /** A stored SHA-256 digest is always 64 lowercase hex chars. */
 const HASHED_PASSWORD_RE = /^[a-f0-9]{64}$/;
 
+/** The fixed demo cohort shown in the grouped student-management views. */
+function getDemoStudentCohort() {
+  const student = (id, name, email, department, course, yearLevel) => ({
+    id, name, email, password: hashPassword('password123'), role: 'student', department, course, yearLevel,
+  });
+  const computing = 'School of Computing Studies';
+  const nursing = 'School of Nursing';
+  const business = 'School of Business and Administration';
+  const bsit = 'BSIT – Bachelor of Science in Information Technology';
+  const bsn = 'BSN – Bachelor of Science in Nursing';
+  const bse = 'BSE – Bachelor of Science in Entrepreneurship';
+  const bshm = 'BSHM – Bachelor of Science in Hospitality Management';
+  const bstm = 'BSTM – Bachelor of Science in Tourism Management';
+
+  return [
+    student('u1', 'John Student', 'student@example.com', computing, bsit, '3'),
+    student('u7', 'Ana Dela Cruz', 'ana@example.com', computing, bsit, '1'),
+    student('u9', 'Carlo Mendoza', 'carlo.mendoza@example.com', computing, bsit, '2'),
+    student('u10', 'Diana Flores', 'diana.flores@example.com', computing, bsit, '4'),
+    student('u3', 'Alice Student', 'alice@example.com', nursing, bsn, '1'),
+    student('u8', 'Patrick Lim', 'patrick@example.com', nursing, bsn, '4'),
+    student('u11', 'Bea Ramos', 'bea.ramos@example.com', nursing, bsn, '2'),
+    student('u12', 'Noel Garcia', 'noel.garcia@example.com', nursing, bsn, '3'),
+    student('u4', 'Bob Student', 'bob@example.com', business, bse, '2'),
+    student('u13', 'Erica Villanueva', 'erica.villanueva@example.com', business, bse, '1'),
+    student('u14', 'Francis Cruz', 'francis.cruz@example.com', business, bse, '3'),
+    student('u15', 'Grace Torres', 'grace.torres@example.com', business, bse, '4'),
+    student('u5', 'Maria Santos', 'maria@example.com', business, bshm, '2'),
+    student('u16', 'Hannah Reyes', 'hannah.reyes@example.com', business, bshm, '1'),
+    student('u17', 'Ivan Lopez', 'ivan.lopez@example.com', business, bshm, '3'),
+    student('u18', 'Janelle Aquino', 'janelle.aquino@example.com', business, bshm, '4'),
+    student('u6', 'Jose Reyes', 'jose@example.com', business, bstm, '3'),
+    student('u19', 'Kyle Navarro', 'kyle.navarro@example.com', business, bstm, '1'),
+    student('u20', 'Lara Castillo', 'lara.castillo@example.com', business, bstm, '2'),
+    student('u21', 'Miguel Bautista', 'miguel.bautista@example.com', business, bstm, '4'),
+  ];
+}
+
 
 /* ============================================================
    Seed Data — populates localStorage on first visit
@@ -190,13 +232,7 @@ function initMockData() {
       { id: 'u2a', name: 'Carlos Reyes',         email: 'reyes.officer@example.com', password: hashPassword('password123'), role: 'ssc-officer', status: 'active' },
 
       // ── Students ──
-      { id: 'u1', name: 'John Student',   email: 'student@example.com', password: hashPassword('password123'), role: 'student', department: 'School of Computing Studies',      course: 'BSIT',    yearLevel: '3' },
-      { id: 'u3', name: 'Alice Student',   email: 'alice@example.com',   password: hashPassword('password123'), role: 'student', department: 'School of Nursing',                  course: 'BSN',      yearLevel: '1' },
-      { id: 'u4', name: 'Bob Student',     email: 'bob@example.com',     password: hashPassword('password123'), role: 'student', department: 'School of Business Management',     course: 'BSEntrep', yearLevel: '2' },
-      { id: 'u5', name: 'Maria Santos',    email: 'maria@example.com',   password: hashPassword('password123'), role: 'student', department: 'School of Business Management',     course: 'BSHM',     yearLevel: '2' },
-      { id: 'u6', name: 'Jose Reyes',      email: 'jose@example.com',    password: hashPassword('password123'), role: 'student', department: 'School of Business Management',     course: 'BSTM',     yearLevel: '3' },
-      { id: 'u7', name: 'Ana Dela Cruz',   email: 'ana@example.com',     password: hashPassword('password123'), role: 'student', department: 'School of Computing Studies',      course: 'BSIT',    yearLevel: '1' },
-      { id: 'u8', name: 'Patrick Lim',     email: 'patrick@example.com', password: hashPassword('password123'), role: 'student', department: 'School of Nursing',                  course: 'BSN',      yearLevel: '4' },
+      ...getDemoStudentCohort(),
     ];
     localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
   } else {
@@ -227,10 +263,6 @@ function initMockData() {
       const additions = [
         { id: 'u0a', name: 'Maria Clara Santos',        email: 'santos.admin@example.com',  password: hashPassword('password123'), role: 'admin' },
         { id: 'u2a', name: 'Carlos Reyes',              email: 'reyes.officer@example.com', password: hashPassword('password123'), role: 'ssc-officer', status: 'active' },
-        { id: 'u5', name: 'Maria Santos',  email: 'maria@example.com',  password: hashPassword('password123'), role: 'student', department: 'School of Business Management', course: 'BSHM',     yearLevel: '2' },
-        { id: 'u6', name: 'Jose Reyes',    email: 'jose@example.com',   password: hashPassword('password123'), role: 'student', department: 'School of Business Management', course: 'BSTM',     yearLevel: '3' },
-        { id: 'u7', name: 'Ana Dela Cruz', email: 'ana@example.com',    password: hashPassword('password123'), role: 'student', department: 'School of Computing Studies',  course: 'BSIT',    yearLevel: '1' },
-        { id: 'u8', name: 'Patrick Lim',   email: 'patrick@example.com',password: hashPassword('password123'), role: 'student', department: 'School of Nursing',              course: 'BSN',      yearLevel: '4' },
       ];
       const existingIds = new Set(users.map(u => u.id));
       additions.forEach(a => {
@@ -252,6 +284,15 @@ function initMockData() {
         }
         return u;
       });
+    }
+
+    /* Academic-cohort migration (v4): update only known demo account IDs and
+       add the requested cohort. Independently created student accounts stay. */
+    if (dummyVersion < 4) {
+      const cohort = getDemoStudentCohort();
+      const cohortIds = new Set(cohort.map(student => student.id));
+      users = [...users.filter(user => !cohortIds.has(user.id)), ...cohort];
+      changed = true;
     }
 
     if (changed) {
@@ -382,7 +423,7 @@ function initMockData() {
   // setting it only at the very end we guarantee every migration runs on the
   // first load after this release, exactly once. Bump the number whenever a
   // new one-time migration is added.
-  localStorage.setItem(STORAGE_KEYS.dummyDataVersion, '3');
+  localStorage.setItem(STORAGE_KEYS.dummyDataVersion, '4');
 }
 
 // Seed data on every page load (no-ops if already seeded).

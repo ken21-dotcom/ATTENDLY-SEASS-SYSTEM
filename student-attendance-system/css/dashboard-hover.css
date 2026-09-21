@@ -2,12 +2,17 @@
    DASHBOARD HOVER TOP-ACCENT BARS — dashboard-only variant.
 
    Applied via the `dashboard-hover-accent` modifier class on the
-   three dashboard pages (Student / SSC / Admin). Overrides the
-   shared accent-bar rules (.stat-card, .dashboard-card,
-   .dash-panel, .activity-panel) so the top accent bar is a HOVER
-   REVEAL on dashboards: hidden at rest, flat solid green growing
-   in from center on hover, spanning the full card width and
-   curving into the rounded top corners.
+   three dashboard pages (Student / SSC / Admin) and every subpage
+   that uses the shared card system. Overrides the shared accent-bar
+   rules (.stat-card, .dashboard-card, .dash-panel, .activity-panel,
+   .role-card, .role-action-card) so the top accent bar is a HOVER
+   REVEAL: hidden at rest, flat solid green growing in from center on
+   hover, spanning the full card width and curving into the rounded
+   top corners.
+
+   Static, non-interactive cards (.student-id-card, .appeal-guide,
+   .biometric-guide) keep their permanent accent bars and are
+   excluded from the hover-reveal.
 
    EVERYTHING here is scoped to body.dashboard-hover-accent, so
    non-dashboard pages keep whatever accent behavior their base
@@ -17,9 +22,11 @@
 /* ── Bar shell shared by every bar-carrying dashboard card.
    Flat solid green — no gradient, no glow. Hidden at rest. ── */
 .dashboard-hover-accent .stat-card::before,
-.dashboard-hover-accent .dashboard-card::before,
+.dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide)::before,
 .dashboard-hover-accent .dash-panel::before,
-.dashboard-hover-accent .activity-panel::before {
+.dashboard-hover-accent .activity-panel::before,
+.dashboard-hover-accent .role-card::before,
+.dashboard-hover-accent .role-action-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -39,20 +46,33 @@
   border-radius: var(--stat-radius) var(--stat-radius) 0 0;
 }
 
-.dashboard-hover-accent .dashboard-card::before,
+.dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide)::before,
 .dashboard-hover-accent .dash-panel::before,
-.dashboard-hover-accent .activity-panel::before {
+.dashboard-hover-accent .activity-panel::before,
+.dashboard-hover-accent .role-card::before,
+.dashboard-hover-accent .role-action-card::before {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 /* ── Hover: fade the solid full-width bar in ── */
 @media (hover: hover) and (pointer: fine) {
   .dashboard-hover-accent .stat-card:hover::before,
-  .dashboard-hover-accent .dashboard-card:hover::before,
+  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover::before,
   .dashboard-hover-accent .dash-panel:hover::before,
-  .dashboard-hover-accent .activity-panel:hover::before {
+  .dashboard-hover-accent .activity-panel:hover::before,
+  .dashboard-hover-accent .role-card:hover::before,
+  .dashboard-hover-accent .role-action-card:hover::before {
     opacity: 1;
     transform: scaleX(1);
+  }
+}
+
+/* Dashboard cards share the same restrained lift as the role panels. */
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover {
+    box-shadow: var(--shadow-card-hover), 0 1px 8px rgba(14, 159, 110, .08);
+    transform: translateY(-2px);
+    border-color: var(--brand-200);
   }
 }
 
@@ -61,16 +81,24 @@
 /* ── Reduced motion: fade in place, no scale grow ── */
 @media (prefers-reduced-motion: reduce) {
   .dashboard-hover-accent .stat-card::before,
-  .dashboard-hover-accent .dashboard-card::before,
+  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide)::before,
   .dashboard-hover-accent .dash-panel::before,
-  .dashboard-hover-accent .activity-panel::before {
+  .dashboard-hover-accent .activity-panel::before,
+  .dashboard-hover-accent .role-card::before,
+  .dashboard-hover-accent .role-action-card::before {
     transition: none;
   }
 
   .dashboard-hover-accent .stat-card:hover::before,
-  .dashboard-hover-accent .dashboard-card:hover::before,
+  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover::before,
   .dashboard-hover-accent .dash-panel:hover::before,
-  .dashboard-hover-accent .activity-panel:hover::before {
+  .dashboard-hover-accent .activity-panel:hover::before,
+  .dashboard-hover-accent .role-card:hover::before,
+  .dashboard-hover-accent .role-action-card:hover::before {
+    transform: none;
+  }
+
+  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover {
     transform: none;
   }
 }

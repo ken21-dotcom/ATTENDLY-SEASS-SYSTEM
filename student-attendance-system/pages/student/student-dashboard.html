@@ -126,65 +126,61 @@
         </article>
 
         <!-- Announcements -->
-        <article class="dashboard-card announcements-card">
-          <div class="card-heading">
-            <div>
-              <p class="section-kicker" aria-hidden="true">From the SCC</p>
-              <h2>Announcements</h2>
-            </div>
-            <span class="card-menu"><i class="bi bi-megaphone"></i></span>
+        <div class="dash-panel announcements-panel">
+          <div class="dash-panel-header">
+            <h3><i class="bi bi-megaphone" style="margin-right:6px;color:var(--bs-primary)"></i>Announcements</h3>
+            <button class="text-link" type="button" id="viewAllAnnouncements">View all <i class="bi bi-arrow-right"></i></button>
           </div>
-          <div id="announcementList" class="announcement-list"></div>
-          <button class="text-link" type="button" id="viewAllAnnouncements">View all announcements <i class="bi bi-arrow-right"></i></button>
-        </article>
+          <div class="dash-panel-body">
+            <div id="announcementList" class="announcement-list"></div>
+          </div>
+        </div>
       </section>
 
       <section class="dashboard-columns lower-columns">
         <!-- Calendar -->
-        <article class="dashboard-card calendar-card">
-          <div class="card-heading">
-            <div>
-              <p class="section-kicker" aria-hidden="true">Schedule</p>
-              <h2 id="calendarMonth"><span id="calendarMonthLabel">Calendar</span><small id="calendarEventCount" class="calendar-month-count"></small></h2>
-            </div>
+        <div class="dash-panel calendar-panel">
+          <div class="dash-panel-header">
+            <h3><i class="bi bi-calendar-event" style="margin-right:6px;color:var(--bs-primary)"></i><span id="calendarMonthLabel">Calendar</span><small id="calendarEventCount" class="calendar-month-count"></small></h3>
             <div class="calendar-controls">
               <button class="icon-button" type="button" aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
               <button class="icon-button" type="button" aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
             </div>
           </div>
-          <div class="calendar-weekdays">
-            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          <div class="dash-panel-body">
+            <div class="calendar-weekdays">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div id="miniCalendar" class="mini-calendar"></div>
+            <div class="calendar-key">
+              <span><i class="calendar-dot"></i> Event day</span>
+              <span><i class="calendar-today"></i> Today</span>
+            </div>
           </div>
-          <div id="miniCalendar" class="mini-calendar"></div>
-          <div class="calendar-key">
-            <span><i class="calendar-dot"></i> Event day</span>
-            <span><i class="calendar-today"></i> Today</span>
-          </div>
-        </article>
+        </div>
 
         <!-- Weather -->
-        <article class="dashboard-card weather-card">
-          <div class="card-heading">
-            <div>
-              <p class="section-kicker" aria-hidden="true">Campus weather</p>
-              <h2>Today's forecast</h2>
-            </div>
+        <div class="dash-panel weather-panel">
+          <div class="dash-panel-header">
+            <h3><i class="bi bi-cloud-sun" style="margin-right:6px;color:#f0b23d"></i>Today's forecast</h3>
             <span class="weather-symbol" id="weatherIcon"><i class="bi bi-cloud-sun"></i></span>
           </div>
-          <div class="weather-main">
-            <strong id="weatherTemp">--°</strong>
-            <div>
-              <span id="weatherCondition">Loading…</span>
-              <div class="weather-feels-like" id="weatherFeelsLike" style="margin-top:4px;font-size:.72rem;color:var(--color-text-muted)">Feels like --°</div>
+          <div class="dash-panel-body">
+            <div class="weather-main">
+              <strong id="weatherTemp">--°</strong>
+              <div>
+                <span id="weatherCondition">Loading…</span>
+                <div class="weather-feels-like" id="weatherFeelsLike" style="margin-top:4px;font-size:.72rem;color:var(--color-text-muted)">Feels like --°</div>
+              </div>
             </div>
+            <div class="weather-details">
+              <span><i class="bi bi-droplet"></i> Humidity <strong id="weatherHumidity">--%</strong></span>
+              <span><i class="bi bi-cloud-rain"></i> Rain chance <strong id="weatherRain">--%</strong></span>
+            </div>
+            <p class="weather-location"><i class="bi bi-geo-alt"></i> JHCSC Balangasan, Pagadian City</p>
+            <p class="weather-updated" id="weatherUpdated" style="margin-top:8px;color:var(--color-text-muted)"></p>
           </div>
-          <div class="weather-details">
-            <span><i class="bi bi-droplet"></i> Humidity <strong id="weatherHumidity">--%</strong></span>
-            <span><i class="bi bi-cloud-rain"></i> Rain chance <strong id="weatherRain">--%</strong></span>
-          </div>
-          <p class="weather-location"><i class="bi bi-geo-alt"></i> JHCSC Balangasan, Pagadian City</p>
-          <p class="weather-updated" id="weatherUpdated" style="margin-top:8px;color:var(--color-text-muted);font-size:.6rem"></p>
-        </article>
+        </div>
       </section>
     </main>
   </div>

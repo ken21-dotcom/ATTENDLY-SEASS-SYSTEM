@@ -11,7 +11,7 @@
   <link href="../../css/styles.css" rel="stylesheet">
   <link href="../../css/dark-style.css" rel="stylesheet">
 </head>
-<body class="student-subpage-page">
+<body class="student-subpage-page dashboard-hover-accent">
   <div class="student-shell">
     <aside class="student-sidebar">
       <a class="student-brand" href="student-dashboard.html"><i class="bi bi-fingerprint"></i><span>ATTENDLY</span></a>
@@ -21,7 +21,7 @@
     </aside>
     <main class="student-main">
       <header class="student-topbar"><div><span class="student-breadcrumb">Workspace /</span><strong>My attendance</strong></div><div class="topbar-actions"><button class="icon-button" type="button" aria-label="Notifications"><i class="bi bi-bell"></i></button><button class="icon-button" type="button" aria-label="Toggle theme" data-theme-toggle><i class="bi bi-moon" data-theme-icon></i></button><span class="topbar-date" id="todayLabel"></span></div></header>
-      <section class="subpage-intro"><p class="section-kicker">Your records</p><h1>Attendance history</h1><p class="intro-copy">A clear record of every event attendance marked at the campus kiosk.</p></section>
+      <section class="subpage-intro"><div><p class="section-kicker">Your records</p><h1>Attendance history</h1><p class="intro-copy">A clear record of every event attendance marked at the campus kiosk.</p></div></section>
       <section class="dashboard-card records-card"><div class="card-heading"><div><p class="section-kicker" aria-hidden="true">Event log</p><h2>Attendance records</h2></div><span class="card-menu"><i class="bi bi-calendar2-check"></i></span></div><div class="table-responsive"><table class="table student-table"><thead><tr><th>Date</th><th>Event</th><th>Time</th><th>Status</th></tr></thead><tbody id="attendanceTableBody"></tbody></table></div><div id="emptyState" class="empty-records d-none">No attendance records yet.</div></section>
     </main>
   </div>

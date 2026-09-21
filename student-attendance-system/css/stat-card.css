@@ -135,11 +135,16 @@
   }
 }
 
-/* ── Value — heavy weight, tight tracking, large ── */
+/* ── Value — heavy weight, tight tracking, large.
+   margin-top:auto anchors the whole value cluster (value → optional
+   progress → footer) to the bottom of the card, so the flexible gap
+   falls between the label and the number — where it reads as breathing
+   room — instead of between the number and its own caption. ── */
 .stat-value {
   position: relative;
   z-index: 1;
-  margin: 20px 0 16px;
+  margin: auto 0 0;
+  padding-top: 20px;
   color: var(--color-text-heading);
   font-size: clamp(2rem, 2.4vw, 2.35rem);
   font-weight: 800;
@@ -156,6 +161,7 @@
 .stat-progress {
   position: relative;
   z-index: 1;
+  margin: 9px 0 0;
   height: 6px;
   border-radius: var(--radius-pill);
   background: var(--color-bg-input);
@@ -173,15 +179,16 @@
   transition: width 700ms var(--ease);
 }
 
-/* ── Footer caption — small muted text; ↗ arrow when actionable ── */
+/* ── Footer caption — small muted text; ↑ arrow when actionable.
+   Lives in the value block's grid (below the progress bar), so it tucks
+   under the number instead of floating to the card's bottom edge. ── */
 .stat-foot {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
   gap: 5px;
-  margin-top: auto;
-  padding-top: 16px;
+  margin: 10px 0 0;
   color: var(--color-text-muted);
   font-size: .7rem;
   text-decoration: none;

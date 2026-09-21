@@ -26,15 +26,15 @@
 .app-shell-main > section,
 .app-shell-main > .dashboard-intro,
 .app-shell-main > .subpage-intro {
-  animation: appShellRise .5s var(--ease) both;
+  animation: appShellRise .22s var(--ease) both;
 }
 .app-shell-main > section:nth-of-type(1),
-.app-shell-main > .dashboard-intro { animation-delay: .06s; }
-.app-shell-main > section:nth-of-type(2) { animation-delay: .14s; }
-.app-shell-main > section:nth-of-type(3) { animation-delay: .22s; }
+.app-shell-main > .dashboard-intro { animation-delay: .03s; }
+.app-shell-main > section:nth-of-type(2) { animation-delay: .07s; }
+.app-shell-main > section:nth-of-type(3) { animation-delay: .11s; }
 @keyframes appShellRise {
-  from { opacity: 0; transform: translateY(16px); filter: blur(1px); }
-  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .app-shell-main > section,
@@ -206,7 +206,9 @@
   font-size: .82rem;
   text-decoration: none;
   text-align: left;
-  transition: all var(--transition-normal) var(--ease);
+  transition: background-color var(--transition-normal) var(--ease),
+              color var(--transition-normal) var(--ease),
+              transform var(--transition-normal) var(--ease);
   font-weight: 500;
 }
 .app-nav a i,

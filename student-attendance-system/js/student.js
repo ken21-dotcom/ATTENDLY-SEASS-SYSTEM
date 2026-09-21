@@ -23,18 +23,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Notifications: bell button + "View all announcements"
+  // Notifications are shared by ui.js; this dashboard also exposes its
+  // "View all" text action to the same panel.
   updateNotificationBadge();
-  const notificationBtn = document.getElementById('notificationBtn');
-  if (notificationBtn) notificationBtn.addEventListener('click', openNotifications);
   const viewAllBtn = document.getElementById('viewAllAnnouncements');
-  if (viewAllBtn) viewAllBtn.addEventListener('click', openNotifications);
-  const closeBtn = document.querySelector('.notification-panel .notification-close');
-  if (closeBtn) closeBtn.addEventListener('click', closeNotifications);
-  const backdrop = document.getElementById('notificationBackdrop');
-  if (backdrop) backdrop.addEventListener('click', closeNotifications);
-  document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') closeNotifications();
+  if (viewAllBtn) viewAllBtn.addEventListener('click', function () {
+    if (window.openSharedNotifications) window.openSharedNotifications(viewAllBtn);
   });
 
   // On attendance page: load attendance records

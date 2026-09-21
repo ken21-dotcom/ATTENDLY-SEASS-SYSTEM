@@ -354,8 +354,6 @@
     gap: 8px;
   }
 
-  .topbar-actions .icon-button[aria-label="Notifications"] { display: none; }
-
   :is(.role-card-body, .dashboard-card, .biometric-table-card) {
     padding-inline: 18px;
   }

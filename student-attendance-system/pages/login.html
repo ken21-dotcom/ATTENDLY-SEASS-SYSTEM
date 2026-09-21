@@ -78,6 +78,7 @@
         <span class="auth-hero-slide-label">Slide <span class="auth-hero-slide-num" id="slideNum"><span class="auth-hero-slide-num-inner current">01</span></span> / 04</span>
         <div class="auth-hero-arrows">
           <button class="auth-hero-arrow" id="heroPrev" aria-label="Previous slide"><i class="bi bi-arrow-left"></i></button>
+          <button class="auth-hero-arrow" id="heroPause" aria-label="Pause slide rotation" aria-pressed="false"><i class="bi bi-pause-fill"></i></button>
           <button class="auth-hero-arrow" id="heroNext" aria-label="Next slide"><i class="bi bi-arrow-right"></i></button>
         </div>
       </div>
@@ -94,12 +95,12 @@
         <h2>Welcome, JHCSCians</h2>
         <p>Sign in to your Attendly account to manage or record check-ins.</p>
       </div>
-      <form id="loginForm" class="auth-form" novalidate autocomplete="off">
+      <form id="loginForm" class="auth-form">
         <div class="mb-3">
           <label for="login-email-field" class="form-label auth-label-uppercase">EMAIL ADDRESS</label>
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" class="form-control" id="login-email-field" name="login-email-field" autocomplete="off" placeholder="Email" readonly onfocus="this.removeAttribute('readonly')" required>
+            <input type="email" class="form-control" id="login-email-field" name="email" autocomplete="username" placeholder="Email" required>
             <div class="invalid-feedback">Please enter a valid email.</div>
           </div>
         </div>
@@ -107,8 +108,8 @@
           <label for="login-password-field" class="form-label auth-label-uppercase">PASSWORD</label>
           <div class="input-group input-group-password">
             <span class="input-group-text"><i class="bi bi-lock"></i></span>
-            <input type="password" class="form-control" id="login-password-field" name="login-password-field" autocomplete="new-password" placeholder="Password" readonly onfocus="this.removeAttribute('readonly')" required>
-            <button type="button" class="input-group-text auth-password-toggle" id="passwordToggle" tabindex="-1" aria-label="Show password"><i class="bi bi-eye" id="passwordToggleIcon"></i></button>
+            <input type="password" class="form-control" id="login-password-field" name="password" autocomplete="current-password" placeholder="Password" required>
+            <button type="button" class="input-group-text auth-password-toggle" id="passwordToggle" aria-label="Show password"><i class="bi bi-eye" id="passwordToggleIcon"></i></button>
             <div class="invalid-feedback">Please enter your password.</div>
           </div>
           <div class="d-flex justify-content-end mt-2">

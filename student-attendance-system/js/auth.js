@@ -170,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const slideNum      = document.querySelector('.auth-hero-slide-num');
     const prevBtn       = document.getElementById('heroPrev');
     const nextBtn       = document.getElementById('heroNext');
+    const pauseBtn      = document.getElementById('heroPause');
     const hero          = document.querySelector('.auth-hero');
 
     let current    = 0;
@@ -178,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let autoTimer  = null; // reduced-motion fallback only
     let isPaused   = false;
+    let isManuallyPaused = false;
 
     /** Restart a segment's fill so it starts empty again. */
     function restartFill(ind) {
@@ -263,8 +265,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function startAuto() {
       stopAuto();
-      isPaused = false;
-      setPlayState('running');
+      isPaused = isManuallyPaused;
+      setPlayState(isPaused ? 'paused' : 'running');
       // Reduced motion disables the CSS fill, so drive the advance with a timer.
       if (reduceMotion) {
         autoTimer = setInterval(function () {
@@ -287,6 +289,13 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!isPaused) return;
       isPaused = false;
       setPlayState('running');
+    }
+
+    function updatePauseButton() {
+      if (!pauseBtn) return;
+      pauseBtn.setAttribute('aria-pressed', String(isPaused));
+      pauseBtn.setAttribute('aria-label', isPaused ? 'Resume slide rotation' : 'Pause slide rotation');
+      pauseBtn.querySelector('i').className = isPaused ? 'bi bi-play-fill' : 'bi bi-pause-fill';
     }
 
     // Auto-advance fires when the active segment finishes filling.
@@ -315,13 +324,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // Arrow buttons — reset the active segment's fill via goToSlide(restart)
     if (prevBtn) prevBtn.addEventListener('click', function () { goToSlide(current - 1, true); });
     if (nextBtn) nextBtn.addEventListener('click', function () { goToSlide(current + 1, true); });
+    if (pauseBtn) pauseBtn.addEventListener('click', function () {
+      isManuallyPaused = !isManuallyPaused;
+      if (isManuallyPaused) pauseAuto(); else resumeAuto();
+      updatePauseButton();
+    });
 
     // Pause autoplay while hovering the hero so it doesn't fight manual navigation
     if (hero) {
       hero.addEventListener('mouseenter', pauseAuto);
-      hero.addEventListener('mouseleave', resumeAuto);
+      hero.addEventListener('mouseleave', function () { if (!isManuallyPaused) resumeAuto(); updatePauseButton(); });
+      hero.addEventListener('focusin', function () { pauseAuto(); updatePauseButton(); });
+      hero.addEventListener('focusout', function (event) {
+        if (!hero.contains(event.relatedTarget) && !isManuallyPaused) { resumeAuto(); updatePauseButton(); }
+      });
     }
 
     goToSlide(current, true);
+    updatePauseButton();
   })();
 });

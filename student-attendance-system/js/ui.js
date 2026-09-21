@@ -95,7 +95,107 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   initResponsiveShell();
+  initNotifications();
 });
+
+/**
+ * Provide one keyboard-safe announcement panel for every workspace. Pages may
+ * include the panel in their markup, but it is created on demand elsewhere so
+ * a bell never looks actionable without actually doing something.
+ */
+function initNotifications() {
+  const triggers = Array.from(document.querySelectorAll('[aria-label="Notifications"]'));
+  if (!triggers.length) return;
+
+  let panel = document.getElementById('notificationPanel');
+  let backdrop = document.getElementById('notificationBackdrop');
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.className = 'notification-panel';
+    panel.id = 'notificationPanel';
+    panel.hidden = true;
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-labelledby', 'notificationPanelTitle');
+    panel.innerHTML = '<div class="notification-panel-head"><div><p class="section-kicker">Campus updates</p><h2 id="notificationPanelTitle">Notifications</h2></div><button class="icon-button notification-close" type="button" aria-label="Close notifications"><i class="bi bi-x-lg"></i></button></div><div class="notification-panel-list" id="notificationList"></div>';
+    document.body.appendChild(panel);
+  }
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'notification-backdrop';
+    backdrop.id = 'notificationBackdrop';
+    backdrop.hidden = true;
+    document.body.appendChild(backdrop);
+  }
+
+  const list = panel.querySelector('.notification-panel-list');
+  const closeButton = panel.querySelector('.notification-close');
+  let trigger = null;
+
+  triggers.forEach(button => {
+    button.setAttribute('aria-controls', panel.id);
+    button.setAttribute('aria-expanded', 'false');
+    button.addEventListener('click', () => open(button));
+  });
+
+  function render() {
+    if (!list) return;
+    const announcements = typeof getAnnouncements === 'function' ? getAnnouncements() : [];
+    list.replaceChildren();
+    if (!announcements.length) {
+      const empty = document.createElement('p');
+      empty.className = 'notification-empty';
+      empty.textContent = 'No announcements yet.';
+      list.appendChild(empty);
+      return;
+    }
+    announcements.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'announcement-item';
+      const title = document.createElement('strong');
+      title.textContent = item.title || 'Campus update';
+      const detail = document.createElement('small');
+      detail.textContent = item.detail || '';
+      row.append(title, detail);
+      list.appendChild(row);
+    });
+  }
+
+  function open(source) {
+    trigger = source || document.activeElement;
+    render();
+    panel.hidden = false;
+    backdrop.hidden = false;
+    document.body.classList.add('notification-open');
+    triggers.forEach(button => button.setAttribute('aria-expanded', 'true'));
+    window.setTimeout(() => closeButton && closeButton.focus(), 0);
+  }
+
+  function close() {
+    if (panel.hidden) return;
+    panel.hidden = true;
+    backdrop.hidden = true;
+    document.body.classList.remove('notification-open');
+    triggers.forEach(button => button.setAttribute('aria-expanded', 'false'));
+    if (trigger && typeof trigger.focus === 'function') trigger.focus();
+  }
+
+  closeButton && closeButton.addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', event => {
+    if (panel.hidden) return;
+    if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(panel.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])'));
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
+
+  window.openSharedNotifications = open;
+}
 
 /**
  * Turn the shared workspace sidebar into an accessible off-canvas drawer on

@@ -158,7 +158,9 @@
   font-size: .82rem;
   text-decoration: none;
   text-align: left;
-  transition: all var(--transition-normal) var(--ease);
+  transition: background-color var(--transition-normal) var(--ease),
+              color var(--transition-normal) var(--ease),
+              transform var(--transition-normal) var(--ease);
   font-weight: 500;
 }
 
@@ -348,16 +350,16 @@
    so a little delight is earned; disabled for reduced-motion. */
 .student-main > section,
 .student-main > .dashboard-intro {
-  animation: sectionRise .5s var(--ease) both;
+  animation: sectionRise .22s var(--ease) both;
 }
 
-.student-main > section:nth-of-type(1) { animation-delay: .06s; }
-.student-main > section:nth-of-type(2) { animation-delay: .14s; }
-.student-main > section:nth-of-type(3) { animation-delay: .22s; }
+.student-main > section:nth-of-type(1) { animation-delay: .03s; }
+.student-main > section:nth-of-type(2) { animation-delay: .07s; }
+.student-main > section:nth-of-type(3) { animation-delay: .11s; }
 
 @keyframes sectionRise {
-  from { opacity: 0; transform: translateY(16px); filter: blur(1px); }
-  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -447,19 +449,8 @@ button.text-link {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .dashboard-card:hover {
-    box-shadow: var(--shadow-card-hover), 0 1px 8px rgba(14, 159, 110, .08);
-    transform: translateY(-2px);
-    border-color: var(--brand-200);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dashboard-card:hover {
-    transform: none;
-  }
-}
+/* Dashboard cards contain information and controls; they are not themselves
+   clickable. Keep their geometry stable while users move between fields. */
 
 .card-heading {
   display: flex;
@@ -673,6 +664,7 @@ button.text-link {
   padding: 14px 10px;
   border-bottom: 1px solid var(--color-border-table);
   border-radius: var(--radius-sm);
+  scroll-margin-top: 10px;
   transition: background-color var(--transition-fast) var(--ease),
               transform var(--transition-fast) var(--ease),
               box-shadow var(--transition-fast) var(--ease);
@@ -721,10 +713,36 @@ button.text-link {
   font-size: .68rem;
 }
 
-/* Lower Columns */
+/* Lower Columns — explicit grid row so the calendar and forecast
+   cards are normal-flow siblings with a real gap between them. */
 .lower-columns {
-  grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr);
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr);
+  gap: 16px;
   margin-bottom: 44px;
+}
+
+/* Calendar & Weather panels — normal flow within their own grid
+   track; independent stacking contexts (isolation) so internal
+   divider lines never bleed onto the sibling. */
+.calendar-panel,
+.weather-panel {
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* The forecast card keeps its own full surface in normal flow.
+   No z-index override, so it can never paint over the calendar. */
+.weather-panel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-default);
+}
+
+.weather-panel .dash-panel-body {
+  padding: 16px 20px;
 }
 
 /* Calendar */
@@ -911,14 +929,15 @@ button.text-link {
 
 .weather-main span {
   color: var(--color-text-muted);
-  font-size: .82rem;
+  font-size: .9rem;
+  font-weight: 500;
 }
 
 .weather-details {
   display: flex;
   gap: 24px;
   color: var(--color-text-muted);
-  font-size: .7rem;
+  font-size: .82rem;
 }
 
 .weather-details i { margin-right: 4px; color: #64a9d7; }
@@ -927,18 +946,25 @@ button.text-link {
   display: block;
   margin-top: 4px;
   color: var(--color-text-primary);
-  font-size: .74rem;
+  font-size: .88rem;
 }
 
 .weather-location {
   margin: 24px 0 0;
   color: var(--color-text-muted);
-  font-size: .7rem;
+  font-size: .82rem;
 }
 
-.weather-location i { color: var(--bs-primary); margin-right: 4px; }
+.weather-location i { color: var(--bs-primary); margin-right: 6px; }
 
-.weather-feels-like { color: var(--color-text-muted) !important; }
+.weather-feels-like {
+  color: var(--color-text-muted) !important;
+  font-size: .82rem !important;
+}
+.weather-updated {
+  font-size: .72rem !important;
+  line-height: 1.4;
+}
 .weather-symbol i { color: inherit; }
 
 /* --- Subpage Styles --- */
@@ -1021,7 +1047,7 @@ button.text-link {
 }
 
 .student-table tbody tr {
-  transition: all var(--transition-normal) var(--ease);
+  transition: background-color var(--transition-normal) var(--ease);
 }
 
 .student-table tbody tr:hover { background: rgba(14, 159, 110, 0.04); }
@@ -1629,10 +1655,13 @@ body.notification-open { overflow: hidden; }
 
 .notification-panel-list {
   overflow-y: auto;
-  padding: 6px 0;
+  padding: 14px 0 6px;
 }
 
-.notification-panel-list .announcement-item { padding: 12px 20px; }
+.notification-panel-list .announcement-item {
+  padding: 12px 20px;
+  scroll-margin-top: 14px;
+}
 
 .notification-empty {
   margin: 0;
