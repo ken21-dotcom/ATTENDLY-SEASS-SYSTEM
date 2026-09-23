@@ -117,10 +117,16 @@
   }
 }
 
-/* Dashboard cards share the same restrained lift as the role panels. */
+/* ── Unified hover styling for all cards: soft green gradient background ── */
 @media (hover: hover) and (pointer: fine) {
-  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover {
-    box-shadow: var(--shadow-card-hover), 0 1px 8px rgba(14, 159, 110, .08);
+  .dashboard-hover-accent .stat-card:hover,
+  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover,
+  .dashboard-hover-accent .dash-panel:hover,
+  .dashboard-hover-accent .activity-panel:hover,
+  .dashboard-hover-accent .role-card:hover,
+  .dashboard-hover-accent .role-action-card:hover {
+    background: linear-gradient(135deg, #ffffff 0%, var(--brand-50) 45%, #e8f5ee 100%);
+    box-shadow: var(--shadow-card-hover), 0 1px 8px rgba(14, 159, 110, .12);
     transform: translateY(-2px);
     border-color: var(--brand-200);
   }
