@@ -155,10 +155,10 @@
 
 [data-theme="dark"] .table { color: var(--color-text-primary); }
 
-/* Table row hover — light --brand-50 would clash on dark; use theme surface */
+/* Table row hover — light green tint for consistency with light theme */
 @media (hover: hover) and (pointer: fine) {
   [data-theme="dark"] .student-table tbody tr:hover {
-    background: var(--color-bg-input);
+    background: rgba(32, 180, 134, .08);
   }
 }
 
@@ -455,10 +455,10 @@
 
 [data-theme="dark"] .announcement-item { border-bottom-color: var(--color-border-default); }
 
-/* Announcement hover — darker surface for dark theme (light --brand-50 would clash) */
+/* Announcement hover — light green background for visibility and consistency */
 @media (hover: hover) and (pointer: fine) {
   [data-theme="dark"] .announcement-item:hover {
-    background: var(--color-bg-input);
+    background: rgba(32, 180, 134, .12);
   }
 }
 
