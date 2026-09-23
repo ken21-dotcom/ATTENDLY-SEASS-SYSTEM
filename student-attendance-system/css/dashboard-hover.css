@@ -19,6 +19,43 @@
    component rules already give them.
    ════════════════════════════════════════════════════════════ */
 
+/* ── Ensure cards have proper positioning for accent bar ──
+   IMPORTANT: We only add overflow:hidden to stat-cards (which never have
+   section kickers above them). For other cards, the accent bar's own
+   border-radius will handle the rounding, and we avoid clipping section
+   kickers that are positioned above the card border.
+
+   All cards with the hover accent bar need extra top padding to ensure
+   content doesn't get clipped by the 5px ::before bar. ── */
+.dashboard-hover-accent .stat-card,
+.dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide),
+.dashboard-hover-accent .dash-panel,
+.dashboard-hover-accent .activity-panel,
+.dashboard-hover-accent .role-card,
+.dashboard-hover-accent .role-action-card {
+  position: relative;
+}
+
+/* Only stat-cards get overflow:hidden since they never have section kickers */
+.dashboard-hover-accent .stat-card {
+  overflow: hidden;
+}
+
+/* Fix content clipping: add extra top padding to clear the 5px accent bar.
+   Dashboard cards and panels that already have padding get 6px added to their
+   existing top padding to ensure the card-heading and content clear the bar. */
+.dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide),
+.dashboard-hover-accent .dash-panel,
+.dashboard-hover-accent .activity-panel {
+  padding-top: calc(var(--card-padding-top, 22px) + 6px) !important;
+}
+
+/* Role cards (SSC/Admin dashboards) also need clearance */
+.dashboard-hover-accent .role-card,
+.dashboard-hover-accent .role-action-card {
+  padding-top: calc(var(--card-padding-top, 24px) + 6px) !important;
+}
+
 /* ── Bar shell shared by every bar-carrying dashboard card.
    Flat solid green — no gradient, no glow. Hidden at rest. ── */
 .dashboard-hover-accent .stat-card::before,
@@ -39,6 +76,7 @@
   transform-origin: center;
   transition: opacity 200ms ease-out,
               transform 240ms ease-out;
+  z-index: 1;
 }
 
 /* ── Bar hugs each card type's own rounded top corners ── */

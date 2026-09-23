@@ -163,7 +163,7 @@
 
 .app-nav-backdrop[hidden] { display: none; }
 
-@media (max-width: 720px) {
+@media (max-width: 650px) {
   :is(.role-dashboard-page, .student-dashboard-page, .student-subpage-page) {
     --workspace-gutter: 16px;
   }

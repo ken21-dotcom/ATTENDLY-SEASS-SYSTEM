@@ -518,6 +518,8 @@ button.text-link {
 .calendar-card,
 .weather-card {
   padding: 22px;
+  /* Ensure content clears the top accent bar (5px ::before) */
+  padding-top: 28px;
 }
 
 .card-heading h2 {
