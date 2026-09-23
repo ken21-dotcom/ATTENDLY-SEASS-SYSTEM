@@ -98,9 +98,7 @@
 .stat-card--featured {
   border-color: var(--brand-200);
   box-shadow: var(--shadow-card), 0 1px 4px rgba(14, 159, 110, .08);
-  background:
-    radial-gradient(380px 260px at -8% -18%, rgba(14, 159, 110, .18) 0%, rgba(14, 159, 110, .05) 55%, transparent 70%),
-    linear-gradient(135deg, #ffffff 0%, var(--brand-50) 45%, #e8f5ee 100%);
+  background: #ffffff;
 }
 
 /* ── Header row: label + top-right icon ── */
