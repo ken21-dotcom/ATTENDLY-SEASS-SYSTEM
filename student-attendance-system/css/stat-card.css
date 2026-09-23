@@ -34,13 +34,12 @@
   overflow: hidden;
   border: 1px solid var(--color-border-default);
   border-radius: var(--stat-radius);
-  background:
-    radial-gradient(320px 240px at -10% -20%, rgba(14, 159, 110, .13) 0%, rgba(14, 159, 110, .03) 55%, transparent 70%),
-    linear-gradient(180deg, #ffffff 0%, #f6faf8 100%);
+  background: #ffffff;
   box-shadow: var(--shadow-card), 0 1px 3px rgba(14, 159, 110, .04);
   transition: box-shadow var(--transition-normal) var(--ease),
               transform var(--transition-normal) var(--ease),
-              border-color var(--transition-normal) var(--ease);
+              border-color var(--transition-normal) var(--ease),
+              background var(--transition-normal) var(--ease);
 }
 
 /* Curved green accent — built into the rounded top corners. Solid,

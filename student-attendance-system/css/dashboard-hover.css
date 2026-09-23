@@ -117,7 +117,7 @@
   }
 }
 
-/* ── Unified hover styling for all cards: soft green gradient background ── */
+/* ── Unified hover styling: soft green gradient + lift effect ── */
 @media (hover: hover) and (pointer: fine) {
   .dashboard-hover-accent .stat-card:hover,
   .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover,
