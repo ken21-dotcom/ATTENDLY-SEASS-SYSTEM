@@ -19,6 +19,18 @@
    component rules already give them.
    ════════════════════════════════════════════════════════════ */
 
+/* ── Hide base accent bars when hover-reveal bars are active ──
+   When dashboard-hover-accent is active, the base ::before bars from
+   student-dashboard.css and role-dashboard.css are hidden. This prevents
+   visual artifacts where two bars overlap at the rounded corners. ── */
+.dashboard-hover-accent .dashboard-card::before,
+.dashboard-hover-accent .dash-panel::before,
+.dashboard-hover-accent .activity-panel::before,
+.dashboard-hover-accent .role-card::before,
+.dashboard-hover-accent .role-action-card::before {
+  display: none;
+}
+
 /* ── Ensure cards have proper positioning for accent bar ──
    IMPORTANT: We only add overflow:hidden to stat-cards (which never have
    section kickers above them). For other cards, the accent bar's own
