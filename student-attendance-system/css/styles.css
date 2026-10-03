@@ -9,8 +9,13 @@
 /* 2. Reset & Base Styles */
 @import './reset.css';
 
-/* 3. Unified App Shell (Student, SSC Officer, Administrator) */
+/* 3. Unified App Shell (SSC Officer, Administrator, Student) */
 @import './app-shell.css';
+
+/* 3b. Severity badges — shared data-display component, emitted by
+       severityBadge() in ui.js. Sits in the same cascade slot the rules
+       previously held inside app-shell.css. */
+@import './severity.css';
 
 /* 4. Student Dashboard & Subpages */
 @import './student-dashboard.css';

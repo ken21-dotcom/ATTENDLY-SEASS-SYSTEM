@@ -3,8 +3,9 @@
 
    Canonical design for every stat/summary card across the
    ATTENDLY (SEASS) prototype (Student, SSC and Admin workspaces):
-   - larger rounded corners
-   - curved green top accent built into the card
+   - --radius-card corners, shared with every other card family
+   - flat emerald top accent, hidden at rest and revealed on hover
+     (the reveal itself is asserted in dashboard-hover.css)
    - subtle top-left gradient fill + slightly visible border
    - heavy, tight-tracked value text
    - optional thin proportional progress bar
@@ -20,56 +21,45 @@
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
+  gap: 18px;
+  margin-top: 8px;
 }
 
 /* ── Card shell ── */
 .stat-card {
-  --stat-radius: 20px;
   position: relative;
   display: flex;
   flex-direction: column;
   min-height: 148px;
-  padding: 20px 22px 18px;
+  padding: 18px 20px 16px;
   overflow: hidden;
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--stat-radius);
-  background: #ffffff;
+  border: 1px solid rgba(130, 145, 136, .28);
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(249,251,250,.98));
   box-shadow: var(--shadow-card), 0 1px 3px rgba(14, 159, 110, .04);
   transition: box-shadow var(--transition-normal) var(--ease),
               transform var(--transition-normal) var(--ease),
-              border-color var(--transition-normal) var(--ease),
-              background var(--transition-normal) var(--ease);
+              border-color var(--transition-normal) var(--ease);
 }
 
-/* Curved green accent — built into the rounded top corners. Solid,
-   static, always visible at rest: full-width bar hugging the card's
-   border-radius, with no gradient or center-glow. */
+/* Top accent bar — flat solid emerald hugging the card's corners. Hidden at
+   rest; dashboard-hover.css scales it in from centre on hover. Both sheets
+   now read the same --accent-bar-* tokens, so a card looks identical whether
+   or not the page carries the `dashboard-hover-accent` modifier. */
 .stat-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  background: var(--brand-500);
-  border-radius: var(--stat-radius) var(--stat-radius) 0 0;
-}
-
-/* Soft green glow on the card face (top-left) — faint at rest, it
-   strengthens along with the rest of the hover treatment. */
-.stat-card::after {
-  content: '';
-  position: absolute;
-  top: -48px;
-  left: -48px;
-  width: 150px;
-  height: 150px;
-  border-radius: var(--radius-circle);
-  background: radial-gradient(circle, rgba(14, 159, 110, .07) 0%, transparent 70%);
-  opacity: .55;
-  pointer-events: none;
-  transition: opacity var(--transition-normal) var(--ease);
+  height: var(--accent-bar-height);
+  background: var(--accent-bar-fill);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  opacity: 0;
+  transform-origin: center;
+  transform: scaleX(var(--accent-bar-rest-scale));
+  transition: var(--accent-bar-transition);
+  z-index: 2;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -78,17 +68,9 @@
     transform: translateY(-2px);
     border-color: var(--brand-200);
   }
-
-  .stat-card:hover::after {
-    opacity: 1;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stat-card::after {
-    transition: none;
-  }
-
   .stat-card:hover {
     transform: none;
   }
@@ -98,7 +80,7 @@
 .stat-card--featured {
   border-color: var(--brand-200);
   box-shadow: var(--shadow-card), 0 1px 4px rgba(14, 159, 110, .08);
-  background: #ffffff;
+  background: var(--color-bg-card);
 }
 
 /* ── Header row: label + top-right icon ── */
@@ -132,11 +114,7 @@
   }
 }
 
-/* ── Value — heavy weight, tight tracking, large.
-   margin-top:auto anchors the whole value cluster (value → optional
-   progress → footer) to the bottom of the card, so the flexible gap
-   falls between the label and the number — where it reads as breathing
-   room — instead of between the number and its own caption. ── */
+/* ── Value — heavy weight, tight tracking, large, 100% solid text. ── */
 .stat-value {
   position: relative;
   z-index: 1;
@@ -148,10 +126,6 @@
   line-height: 1;
   letter-spacing: -.045em;
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(135deg, var(--color-text-heading) 0%, #233a2e 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 /* ── Progress track / fill (only for percentage-ish metrics) ── */
@@ -223,14 +197,8 @@
 /* ── Dark theme ── */
 [data-theme="dark"] .stat-card {
   border-color: #1d3529;
-  background:
-    radial-gradient(320px 240px at -10% -20%, rgba(79, 206, 159, .10) 0%, rgba(79, 206, 159, .02) 55%, transparent 70%),
-    linear-gradient(180deg, #111c16 0%, #0e1913 100%);
+  background: var(--color-bg-card);
   box-shadow: var(--shadow-card);
-}
-
-[data-theme="dark"] .stat-card::after {
-  background: radial-gradient(circle, rgba(79, 206, 159, .06) 0%, transparent 70%);
 }
 
 [data-theme="dark"] .stat-card:hover { border-color: #2a4a3a; }
@@ -241,15 +209,11 @@
 
 [data-theme="dark"] .stat-card--featured {
   border-color: #1f3d2e;
-  background:
-    radial-gradient(380px 260px at -8% -18%, rgba(79, 206, 159, .14) 0%, rgba(79, 206, 159, .04) 55%, transparent 70%),
-    linear-gradient(135deg, #111c16 0%, #0f2419 100%);
+  background: var(--color-bg-card);
 }
 
 [data-theme="dark"] .stat-value {
-  background: none;
   color: var(--color-text-heading);
-  -webkit-text-fill-color: var(--color-text-heading);
 }
 
 [data-theme="dark"] .stat-label,

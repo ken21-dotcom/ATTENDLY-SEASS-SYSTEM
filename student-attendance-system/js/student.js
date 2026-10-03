@@ -119,7 +119,7 @@ function loadStudentDashboard(user) {
   const standingElement = document.getElementById('standingStatus');
   if (standingElement) {
     standingElement.textContent = standingLabels[standing] || 'Good Standing';
-    standingElement.className = `enrollment-pill standing-${standing}`;
+    standingElement.className = `enrollment-pill standing-${safeToken(standing, ['good', 'warning', 'probation', 'suspension'])}`;
   }
 
   document.getElementById('donutPercent').textContent = `${attendanceRate}%`;
@@ -285,7 +285,7 @@ function loadEnrollmentStatus(studentId) {
   const status = record ? record.status : 'not-enrolled';
   const labels = { enrolled: 'Enrolled', 'needs-reenrollment': 'Needs re-enrollment', 'not-enrolled': 'Not enrolled' };
   statusElement.textContent = labels[status] || 'Not enrolled';
-  statusElement.className = `enrollment-pill ${status}`;
+  statusElement.className = `enrollment-pill ${safeToken(status, ['enrolled', 'needs-reenrollment', 'not-enrolled'])}`;
   detailElement.textContent = 'Your fingerprint can only be registered or changed by an ATTENDLY administrator.';
 
   const setButtonState = function(disabled, text) {
@@ -349,7 +349,7 @@ function announcementItemHTML(announcement) {
   return `
     <div class="announcement-item">
       <span class="announcement-icon ${announcement.type === 'event' ? 'event-icon' : ''}"><i class="bi bi-${announcement.type === 'event' ? 'calendar-event' : 'megaphone'}"></i></span>
-      <div><strong>${announcement.title}</strong><small>${announcement.detail}</small></div>
+      <div><strong>${escapeHtml(announcement.title)}</strong><small>${escapeHtml(announcement.detail)}</small></div>
     </div>`;
 }
 
@@ -432,7 +432,7 @@ function renderMiniCalendar(monthDate, events) {
     const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
     const dayEvents = visibleEvents.filter(event => event.date === dateKey);
     const hasEvent = dayEvents.length > 0;
-    const titleAttr = hasEvent ? ` title="${dayEvents.length} ${dayEvents.length === 1 ? 'event' : 'events'}"` : '';
+    const titleAttr = hasEvent ? ` title="${escapeHtml(dayEvents.length + ' ' + (dayEvents.length === 1 ? 'event' : 'events'))}"` : '';
     cells.push(`<span class="calendar-cell ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}"${titleAttr}>${day}</span>`);
   }
 
@@ -456,9 +456,9 @@ function loadStudentAttendance(studentId) {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${formatDate(record.date)}</td>
-      <td>${event.name}</td>
-      <td>${record.time ?? '—'}</td>
-      <td><span class="status-badge ${record.status}">${record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span></td>
+      <td>${escapeHtml(event.name)}</td>
+      <td>${escapeHtml(record.time ?? '—')}</td>
+      <td><span class="status-badge ${safeToken(record.status, ['present', 'late', 'absent', 'excused'])}">${escapeHtml(record.status)}</span></td>
     `;
     tbody.appendChild(row);
   });
@@ -474,16 +474,16 @@ function loadStudentSanctions(studentId) {
   sanctions.forEach(sanction => {
     const appeal = appeals.find(item => item.sanctionId === sanction.id);
     const appealCell = appeal
-      ? `<span class="appeal-status ${appeal.status}">${appeal.status}</span>`
+      ? `<span class="appeal-status ${safeToken(appeal.status, ['pending', 'approved', 'denied'])}">${escapeHtml(appeal.status)}</span>`
       : sanction.status === 'active'
         ? `<a class="appeal-link" href="student-appeal.html?sanction=${encodeURIComponent(sanction.id)}">Appeal</a>`
         : '<span class="text-muted">Not available</span>';
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${formatDate(sanction.date)}</td>
-      <td>${sanction.description}</td>
+      <td>${escapeHtml(sanction.description)}</td>
       <td>${severityBadge(sanction.severity)}</td>
-      <td><span class="badge bg-${sanction.status === 'active' ? 'danger' : 'secondary'}">${sanction.status}</span></td>
+      <td><span class="badge bg-${sanction.status === 'active' ? 'danger' : 'secondary'}">${escapeHtml(sanction.status)}</span></td>
       <td>${appealCell}</td>
     `;
     tbody.appendChild(row);
@@ -497,7 +497,7 @@ function loadAppealForm(studentId) {
   const appeals = getAppeals().filter(appeal => appeal.studentId === studentId);
   const availableSanctions = activeSanctions.filter(sanction => !appeals.some(appeal => appeal.sanctionId === sanction.id && appeal.status === 'pending'));
   select.innerHTML = availableSanctions.length
-    ? availableSanctions.map(sanction => `<option value="${sanction.id}">${sanction.description} - ${formatDate(sanction.date)}</option>`).join('')
+    ? availableSanctions.map(sanction => `<option value="${escapeHtml(sanction.id)}">${escapeHtml(sanction.description)} - ${formatDate(sanction.date)}</option>`).join('')
     : '<option value="">No sanctions available for appeal</option>';
   const requestedSanction = new URLSearchParams(window.location.search).get('sanction');
   if (requestedSanction && availableSanctions.some(sanction => sanction.id === requestedSanction)) select.value = requestedSanction;

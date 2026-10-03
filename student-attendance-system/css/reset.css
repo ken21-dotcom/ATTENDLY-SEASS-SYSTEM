@@ -40,23 +40,10 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
 ::-webkit-scrollbar-thumb:hover { background-color: rgba(124, 139, 131, .45); background-clip: content-box; }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* Navbar brand base */
-.navbar-brand {
-  font-weight: bold;
-}
-
-/* Primary/Success/Dark navbar override */
-.navbar.bg-primary,
-.navbar.bg-success,
-.navbar.bg-dark {
-  background-color: var(--bs-primary) !important;
-}
-
-.navbar.bg-dark .navbar-brand,
-.navbar.bg-success .navbar-brand,
-.navbar.bg-primary .navbar-brand {
-  color: #fff;
-}
+/* NOTE: the .navbar-brand / .navbar.bg-* override block was removed here.
+   The app has no Bootstrap navbar — every page uses its own .role-brand /
+   .student-brand / .kiosk-brand shell. Plain Bootstrap remains the baseline
+   for any component reintroduced later. */
 
 /* ── Card base styles ── */
 .card {
@@ -115,9 +102,21 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
 .form-select:focus,
 .btn:focus {
   border-color: var(--color-border-focus);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 2px rgba(14, 159, 110, .18);
   outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
+}
+
+/* Auth pages intentionally suppress the default global focus halo to keep
+   their fields clean until the user actively focuses them. */
+.auth-page .form-control:focus,
+.auth-page .form-select:focus,
+.auth-page .btn:focus,
+.auth-page .form-control:focus-visible,
+.auth-page .form-select:focus-visible,
+.auth-page .btn:focus-visible {
+  box-shadow: none;
+  outline: none;
 }
 
 /* Buttons keep outline but suppress the duplicate ring shadow */
@@ -165,8 +164,9 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
   z-index: 1050;
 }
 
-/* Table improvements */
-.table-hover tbody tr:hover { background-color: rgba(14, 159, 110, .04); }
+/* Table improvements
+   NOTE: the .table-hover row-tint override was removed — no table in the app
+   carries the class. The data tables style their own hover state. */
 
 /* Selection color — green tint matching the brand */
 ::selection {
@@ -185,22 +185,10 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
   box-shadow: var(--shadow-card) !important;
 }
 
-/* Demo login panel */
-.demo-login-panel {
-  border-top: 1px solid var(--color-border-default);
-  padding-top: 18px;
-}
-
-.demo-login-title {
-  margin: 0 0 10px;
-  color: var(--color-text-muted);
-  font-size: .76rem;
-  font-weight: 700;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
+/* Demo login buttons.
+   NOTE: .demo-login-panel, .demo-login-title and .demo-password were removed
+   from this block — login.html renders .demo-account buttons directly inside
+   .auth-form-panel, so the wrapper, heading and password hint never existed. */
 .demo-account {
   display: flex;
   width: 100%;
@@ -238,16 +226,4 @@ body:not(.student-dashboard-page):not(.student-subpage-page):not(.role-dashboard
   border-color: var(--bs-primary);
   background: var(--brand-50);
   box-shadow: var(--shadow-xs);
-}
-
-.demo-password {
-  margin: 17px 0 0;
-  color: var(--color-text-muted);
-  font-size: .76rem;
-  text-align: center;
-}
-
-.demo-password code {
-  color: var(--bs-primary);
-  font-size: .76rem;
 }

@@ -39,9 +39,14 @@
   --color-bg-success-light: #0f2419;
   --color-bg-warning-light: #2a250f;
   --color-bg-danger-light: #2a1416;
+  --color-probation-bg: #3a2410;
+  /* The light-theme info/violet tints are near-white; keeping them would put
+     bright chips on dark cards in the activity feed. */
+  --color-bg-info-light: #13273f;
+  --color-bg-violet-light: #281d38;
 
   --color-border-default: #1d2d24;
-  --color-border-input: #1f3027;
+  --color-border-input: #649b7e;
   --color-border-sidebar: rgba(255,255,255,.05);
   --color-border-table: #19261e;
   --color-border-focus: #20b486;
@@ -55,6 +60,9 @@
   --color-text-success-light: #5fd8ab;
   --color-text-warning: #e5b53c;
   --color-text-danger: #ef8288;
+  --color-text-probation: #f0a45c;
+  --color-text-info: #9cc0ff;
+  --color-text-violet: #d4b8f5;
 
   --color-badge-warning: #e5b53c;
   --color-badge-probation: #ee9442;
@@ -66,6 +74,13 @@
   --shadow-card-hover: 0 4px 16px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.2);
   --shadow-focus: 0 0 0 3px rgba(32, 180, 134, .25);
   --shadow-pop: 0 8px 28px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.2);
+
+  /* The dark suspension fill (#ec5864) is lighter than the light-theme one, so
+     white text drops to 3.42:1 and the near-black label reaches 4.52:1.
+     Probation and warning already use #212529 in app-shell.css. */
+  .badge-suspension-severity {
+    color: #212529;
+  }
 
   /* Bootstrap design tokens — re-theme baseline components so utilities,
      input groups, tabs, alerts, dropdowns etc. follow the theme too. */
@@ -90,8 +105,9 @@
   --bs-danger-bg: #2a1416;
   --bs-danger-text-emphasis: #ef8288;
 
-  /* Accent line glow — dark variant of the shared ::root token */
-  --accent-glow: linear-gradient(90deg, transparent, rgba(79, 206, 159, .85) 50%, transparent);
+  /* Top-accent bar — the mint brand step reads better than --brand-500 on
+     the darker card surface. Flat fill, same reveal timing as light theme. */
+  --accent-bar-fill: var(--brand-400);
 }
 
 [data-theme="dark"] body {
@@ -107,7 +123,6 @@
 
 [data-theme="dark"] .dashboard-card,
 [data-theme="dark"] .student-table,
-[data-theme="dark"] .role-action-card,
 [data-theme="dark"] .dash-panel,
 [data-theme="dark"] .activity-panel,
 [data-theme="dark"] .kiosk-card,
@@ -140,6 +155,27 @@
   background: var(--color-bg-input);
   color: var(--color-text-primary);
   border-color: var(--color-border-input);
+}
+
+[data-theme="dark"] .auth-form .input-group {
+  background: #18251f;
+  border-color: rgba(109, 124, 117, 0.46);
+  box-shadow: 0 10px 22px rgba(5, 10, 8, 0.24);
+}
+
+[data-theme="dark"] .auth-form .input-group:focus-within {
+  border-color: var(--campus-green);
+  box-shadow: 0 0 0 3px rgba(32, 180, 134, 0.16), 0 10px 22px rgba(5, 10, 8, 0.24);
+}
+
+[data-theme="dark"] .auth-form .form-control:-webkit-autofill,
+[data-theme="dark"] .auth-form .form-control:-webkit-autofill:hover,
+[data-theme="dark"] .auth-form .form-control:-webkit-autofill:focus,
+[data-theme="dark"] .auth-form .form-control:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px rgba(18, 28, 24, 0.94) inset, 0 0 0 1px rgba(100, 155, 126, 0.15) inset !important;
+  -webkit-text-fill-color: #ecf5f0 !important;
+  border-color: rgba(100, 155, 126, 0.28) !important;
+  background-color: rgba(18, 28, 24, 0.94) !important;
 }
 
 [data-theme="dark"] .form-control:focus,
@@ -211,8 +247,7 @@
 
 [data-theme="dark"] .reader-instruction,
 [data-theme="dark"] .biometric-guide,
-[data-theme="dark"] .appeal-guide,
-[data-theme="dark"] .profile-biometric-card {
+[data-theme="dark"] .appeal-guide {
   background: linear-gradient(160deg, #152019 0%, #111c16 100%);
   border-color: #1d3529;
 }
@@ -305,7 +340,6 @@
 }
 
 [data-theme="dark"] .appeal-guide ol,
-[data-theme="dark"] .profile-note,
 [data-theme="dark"] .biometric-guide p { color: #8fa399; }
 
 [data-theme="dark"] .announcement-icon { background: var(--color-bg-success-light); }
@@ -391,7 +425,7 @@
 
 /* Calendar markers */
 [data-theme="dark"] .calendar-today { background: var(--brand-500); border-color: var(--brand-500); }
-[data-theme="dark"] .calendar-dot { background: #2f6b4f; border-color: #2f6b4f; }
+[data-theme="dark"] .calendar-dot { background: #12301f; border-color: #62d9ab; }
 
 /* Announcements & donut chart */
 [data-theme="dark"] .announcement-icon.event-icon {
@@ -462,7 +496,6 @@
   }
 }
 
-[data-theme="dark"] .appeal-help,
 [data-theme="dark"] .appeal-submitted p { color: var(--color-text-muted); }
 
 /* Muted secondary text on cards */
@@ -477,12 +510,9 @@
 [data-theme="dark"] .topbar-date,
 [data-theme="dark"] .empty-records { color: var(--color-text-muted); }
 
-/* Modal alert (re-enrollment) */
-[data-theme="dark"] .alert-warning {
-  background-color: var(--bs-warning-bg);
-  color: var(--bs-warning-text-emphasis);
-  border-color: var(--bs-border-color);
-}
+/* NOTE: the dark .alert-warning override was removed — there is no .alert
+   markup in the app (the re-enrollment modal it was written for does not
+   exist). Bootstrap's own alert theming applies if one is added later. */
 
 /* Report tabs */
 [data-theme="dark"] .nav-tabs { border-bottom-color: var(--bs-border-color); }
@@ -500,10 +530,7 @@
   border-color: var(--bs-border-color);
 }
 
-/* Login demo panel */
-[data-theme="dark"] .demo-login-panel { border-top-color: var(--color-border-default); }
-[data-theme="dark"] .demo-login-title { color: var(--color-text-muted); }
-
+/* Login demo buttons */
 [data-theme="dark"] .demo-account {
   border-color: var(--color-border-input);
   background: var(--color-bg-input);
@@ -518,9 +545,6 @@
   background: var(--color-bg-success-light);
 }
 
-[data-theme="dark"] .demo-password { color: var(--color-text-muted); }
-
-
 /* ────────────────────────────────────────────────
    3. AUTH / LOGIN PAGE DARK OVERRIDES
    ──────────────────────────────────────────────── */
@@ -530,6 +554,12 @@
 :root[data-theme="dark"] .auth-page {
   --campus-bark: #ecebe4;
   --campus-fog: #9fb0a6;
+  --campus-fog-strong: #71857a;
+  --campus-link: var(--campus-accent);
+
+  /* Lifted risk red — the light value loses too much contrast on the dark
+     form surface. Matches the invalid-feedback red used below. */
+  --campus-risk: #f87171;
 
   /* Neutralize the app-wide dark teal tokens on the login page only, so
      no element on the auth screen can fall through to a generic #20b486
@@ -562,15 +592,25 @@
 :root:not([data-theme="light"]) .auth-form .form-control,
 :root[data-theme="dark"] .auth-form .form-control {
   background: #18251f;
-  border-color: var(--color-border-input);
+  border: 0 !important;
   color: #e2ece6;
+  box-shadow: none !important;
+  outline: none;
+}
+
+:root:not([data-theme="light"]) .auth-form .form-control::placeholder,
+:root[data-theme="dark"] .auth-form .form-control::placeholder {
+  color: rgba(185, 194, 188, 0.68);
 }
 
 :root:not([data-theme="light"]) .auth-form .form-control:focus,
-:root[data-theme="dark"] .auth-form .form-control:focus {
+:root[data-theme="dark"] .auth-form .form-control:focus,
+:root:not([data-theme="light"]) .auth-form .form-control:focus-visible,
+:root[data-theme="dark"] .auth-form .form-control:focus-visible {
   background: #18251f;
-  border-color: var(--campus-green);
-  box-shadow: 0 0 0 3px rgba(26, 77, 58, .12);
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none;
 }
 
 /* Invalid feedback — ensure red is visible on dark form surface.
@@ -579,16 +619,17 @@
 :root:not([data-theme="light"]) .auth-form,
 :root[data-theme="dark"] .auth-form {
   --bs-form-invalid-color: #f87171;
-  --bs-form-invalid-border-color: #f87171;
+  --bs-form-invalid-border-color: rgba(90, 171, 141, 0.42);
+  --bs-form-invalid-box-shadow: none;
 }
 
 /* Input group adornments */
 :root:not([data-theme="light"]) .auth-form .input-group-text,
 :root[data-theme="dark"] .auth-form .input-group-text {
-  background: #18251f;
-  border-color: var(--color-border-input);
-  color: #9fb0a6;
-}
+    background: #18251f;
+  border: 0 !important;
+    color: var(--campus-fog);
+  }
 
 /* Form labels */
 :root:not([data-theme="light"]) .auth-form .form-label,
@@ -612,8 +653,16 @@
   box-shadow: 0 1px 4px rgba(26, 77, 58, .2);
 }
 
-/* Password toggle — square inner edge is already handled in auth.css;
-   on dark the green hover turns gold to match the focus-visible ring. */
+/* Password toggle — square inner edge is already handled in auth.css.
+   auth.css sets the light base to --campus-fog-strong (#5f6f66), which is tuned
+   for the light input fill. On the dark input fill (#18251f) that mid sage only
+   reaches 3.67:1, so the dark base becomes --campus-fog (#9fb0a6) instead. */
+:root:not([data-theme="light"]) .auth-form .auth-password-toggle,
+:root[data-theme="dark"] .auth-form .auth-password-toggle {
+  color: var(--campus-fog);
+}
+
+/* on dark the green hover turns gold to match the focus-visible ring. */
 :root:not([data-theme="light"]) .auth-form .auth-password-toggle:hover,
 :root:not([data-theme="light"]) .auth-form .auth-password-toggle:focus-visible {
   color: var(--campus-gold);
@@ -644,6 +693,48 @@
 :root:not([data-theme="light"]) .auth-form .auth-label-uppercase,
 :root[data-theme="dark"] .auth-form .auth-label-uppercase {
   color: #9fb0a6;
+}
+
+/* ── Sign-up extras (see the SIGN UP section in auth.css) ── */
+
+/* Select caret + trailing add-on share the password toggle's surface, so
+   they read as one control rather than two stacked edges. */
+:root:not([data-theme="light"]) .auth-form .auth-select-caret,
+:root[data-theme="dark"] .auth-form .auth-select-caret {
+  background: #18251f;
+  border-color: var(--color-border-input);
+  color: #9fb0a6;
+}
+
+/* Unfilled meter segments need a lighter track to stay visible on the
+   dark panel; the filled ones already carry their own colour. */
+:root:not([data-theme="light"]) .auth-strength-bar,
+:root[data-theme="dark"] .auth-strength-bar {
+  background: #223028;
+}
+
+/* Terms label sits on the panel, not on an input, so it takes the muted
+   sage rather than the light label colour used for form-labels above. */
+:root:not([data-theme="light"]) .auth-terms-label,
+:root[data-theme="dark"] .auth-terms-label {
+  color: #9fb0a6;
+}
+
+/* Sign-in link — mint on dark, matching the hero accent, with gold hover
+   so it agrees with the other auth links in this theme. */
+:root:not([data-theme="light"]) .auth-switch,
+:root[data-theme="dark"] .auth-switch {
+  color: #9fb0a6;
+}
+
+:root:not([data-theme="light"]) .auth-switch a,
+:root[data-theme="dark"] .auth-switch a {
+  color: var(--campus-accent);
+}
+
+:root:not([data-theme="light"]) .auth-switch a:hover,
+:root[data-theme="dark"] .auth-switch a:hover {
+  color: var(--campus-gold);
 }
 
 /* ========================================
@@ -767,37 +858,11 @@
   }
 }
 
-/* ========================================
-   Landing page — dark mode
-   ======================================== */
-:root:not([data-theme="light"]) .landing-card,
-:root[data-theme="dark"] .landing-card {
-  background: var(--color-bg-card);
-}
+/* NOTE: the "Landing page — dark mode" section that used to end this file was
+   removed. There is no landing page — the app goes straight to login.html /
+   signup.html. .landing-card, .landing-cta--login and .landing-page are
+   referenced nowhere in pages/ or js/, so all of it was dead. The
+   .landing-page-scoped .theme-toggle-fab overrides went with it; the live
+   button (login.html, signup.html) is already covered globally by the
+   [data-theme="dark"] .theme-toggle-fab rules at the top of this file. */
 
-:root:not([data-theme="light"]) .landing-cta--login,
-:root[data-theme="dark"] .landing-cta--login {
-  background: #152620;
-  border-color: var(--color-border-input);
-  color: var(--color-text-primary);
-}
-
-:root:not([data-theme="light"]) .landing-cta--login:hover,
-:root[data-theme="dark"] .landing-cta--login:hover {
-  background: #1b2f27;
-}
-
-:root:not([data-theme="light"]) .landing-page .theme-toggle-fab,
-:root[data-theme="dark"] .landing-page .theme-toggle-fab {
-  background: rgba(19, 29, 24, .7);
-  border-color: rgba(255, 255, 255, .08);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  :root:not([data-theme="light"]) .landing-page .theme-toggle-fab:hover,
-  :root[data-theme="dark"] .landing-page .theme-toggle-fab:hover {
-    background: rgba(30, 46, 38, .9);
-    border-color: rgba(255, 255, 255, .18);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
-  }
-}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | ATTENDLY</title>
+  <title>Create account | ATTENDLY</title>
   <!-- Preconnect to font origins to reduce DNS/TLS latency -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +20,8 @@
 
   <div class="auth-split">
     <button class="icon-button theme-toggle-fab" type="button" aria-label="Toggle theme" data-theme-toggle><i class="bi bi-moon" data-theme-icon></i></button>
-    <!-- Hero panel (carousel) -->
+    <!-- Hero panel (carousel) — identical to the login screen; auth.js drives
+         it by class, so no per-page wiring is needed. -->
     <div class="auth-hero">
       <div class="auth-hero-slides">
         <div class="auth-hero-slide active" style="background-image:url('../images/LOGIN4.webp')"></div>
@@ -38,7 +39,7 @@
             <span class="auth-hero-detail"><i class="bi bi-lightning-charge"></i> Instant attendance logs</span>
           </div>
         </div>
-        <!-- Slide 2 — placeholder: customize this content -->
+        <!-- Slide 2 -->
         <div class="auth-hero-slide-content">
           <h1>Enroll once,<br><em>check in fast.</em></h1>
           <p>Register your biometrics once and breeze through every campus event with hands-free identity verification.</p>
@@ -47,7 +48,7 @@
             <span class="auth-hero-detail"><i class="bi bi-shield-lock"></i> Encrypted biometric data</span>
           </div>
         </div>
-        <!-- Slide 3 — placeholder: customize this content -->
+        <!-- Slide 3 -->
         <div class="auth-hero-slide-content">
           <h1>Real-time<br><em>attendance tracking.</em></h1>
           <p>Officers see live attendance dashboards as students check in — no more manual headcounts.</p>
@@ -56,7 +57,7 @@
             <span class="auth-hero-detail"><i class="bi bi-calendar-check"></i> Event scheduling</span>
           </div>
         </div>
-        <!-- Slide 4 — placeholder: customize this content -->
+        <!-- Slide 4 -->
         <div class="auth-hero-slide-content">
           <h1>Secure,<br><em>transparent records.</em></h1>
           <p>Every check-in is logged with tamper-proof biometric verification for full transparency.</p>
@@ -82,56 +83,115 @@
       </div>
     </div>
 
-    <!-- Form panel -->
-    <main id="main-content" class="auth-form-panel">
+    <!-- Form panel. Taller than the login panel, so it scrolls. -->
+    <main id="main-content" class="auth-form-panel auth-form-panel--scroll">
       <div class="auth-form-brand">
         <div class="auth-logo-badge"><i class="bi bi-fingerprint"></i></div>
         <span>Attendly</span>
         <span class="auth-badge-biometrics">BIOMETRICS</span>
       </div>
       <div class="auth-form-header">
-        <h2>Welcome, JHCSCians</h2>
-        <p>Sign in to your Attendly account to manage or record check-ins.</p>
+        <h2>Create your account</h2>
+        <p>Register as a student to start checking in to campus events with a single scan.</p>
       </div>
-      <form id="loginForm" class="auth-form">
-        <div class="mb-3">
-          <label for="login-email-field" class="form-label auth-label-uppercase">EMAIL ADDRESS</label>
+      <form id="signupForm" class="auth-form" novalidate>
+        <div class="mb-3 auth-field-group">
+          <label for="signup-name-field" class="form-label auth-label-uppercase">FULL NAME</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" class="form-control" id="signup-name-field" name="name" autocomplete="name" placeholder="Juan Dela Cruz" required>
+          </div>
+          <div class="invalid-feedback">Please enter your full name.</div>
+        </div>
+        <div class="mb-3 auth-field-group">
+          <label for="signup-email-field" class="form-label auth-label-uppercase">SCHOOL EMAIL</label>
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" class="form-control" id="login-email-field" name="email" autocomplete="username" placeholder="Email" required>
+            <input type="email" class="form-control" id="signup-email-field" name="email" autocomplete="email" placeholder="you@jhcerilles.edu.ph" required>
           </div>
-          <div class="invalid-feedback">Please enter a valid email.</div>
+          <div class="invalid-feedback">Please enter a valid email address.</div>
         </div>
-        <div class="mb-4">
-          <label for="login-password-field" class="form-label auth-label-uppercase">PASSWORD</label>
+        <div class="mb-3 auth-field-group">
+          <label for="signupDepartment" class="form-label auth-label-uppercase">DEPARTMENT</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-buildings"></i></span>
+            <select class="form-control auth-select" id="signupDepartment" name="department"></select>
+            <span class="input-group-text auth-select-caret" aria-hidden="true"><i class="bi bi-chevron-down"></i></span>
+          </div>
+        </div>
+        <div class="auth-form-row mb-3 auth-field-group">
+          <div>
+            <label for="signupCourse" class="form-label auth-label-uppercase">COURSE</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-journal-text"></i></span>
+              <select class="form-control auth-select" id="signupCourse" name="course"></select>
+              <span class="input-group-text auth-select-caret" aria-hidden="true"><i class="bi bi-chevron-down"></i></span>
+            </div>
+          </div>
+          <div>
+            <label for="signupYear" class="form-label auth-label-uppercase">YEAR LEVEL</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+              <select class="form-control auth-select" id="signupYear" name="yearLevel"></select>
+              <span class="input-group-text auth-select-caret" aria-hidden="true"><i class="bi bi-chevron-down"></i></span>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3 auth-field-group">
+          <label for="signup-password-field" class="form-label auth-label-uppercase">PASSWORD</label>
           <div class="input-group input-group-password">
             <span class="input-group-text"><i class="bi bi-lock"></i></span>
-            <input type="password" class="form-control" id="login-password-field" name="password" autocomplete="current-password" placeholder="Password" required>
-            <button type="button" class="input-group-text auth-password-toggle" id="passwordToggle" aria-label="Show password"><i class="bi bi-eye" id="passwordToggleIcon"></i></button>
+            <input type="password" class="form-control" id="signup-password-field" name="password" autocomplete="new-password" placeholder="Password" required>
+            <button type="button" class="input-group-text auth-password-toggle" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye"></i></button>
           </div>
-          <div class="invalid-feedback">Please enter your password.</div>
-          <div class="d-flex justify-content-end mt-2">
-            <a href="#" class="auth-forgot" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot password?</a>
+          <div class="invalid-feedback">8+ characters required with a letter and number</div>
+          <!-- Strength readout. aria-live so the level is announced as it
+               changes; the label text names the level, not just the colour. -->
+          <div class="auth-strength" id="signupStrength" data-level="0">
+            <div class="auth-strength-bars" aria-hidden="true">
+              <span class="auth-strength-bar"></span>
+              <span class="auth-strength-bar"></span>
+              <span class="auth-strength-bar"></span>
+              <span class="auth-strength-bar"></span>
+            </div>
+            <span class="auth-strength-label" id="signupStrengthLabel" aria-live="polite">8+ characters required with a letter and number</span>
           </div>
         </div>
+        <div class="mb-3 auth-field-group auth-field-tight">
+          <label for="signup-confirm-field" class="form-label auth-label-uppercase">CONFIRM PASSWORD</label>
+          <div class="input-group input-group-password">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input type="password" class="form-control" id="signup-confirm-field" name="confirmPassword" autocomplete="new-password" placeholder="Repeat password" required>
+            <button type="button" class="input-group-text auth-password-toggle" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye"></i></button>
+          </div>
+          <div class="invalid-feedback">Passwords do not match.</div>
+        </div>
+        <div class="auth-check mb-3">
+          <input type="checkbox" class="auth-check-input" id="signup-terms" name="terms" required>
+          <div>
+            <label class="auth-terms-label" for="signup-terms">I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">biometric data policy</a> and the college's attendance rules.</label>
+          </div>
+        </div>
+        <div class="invalid-feedback auth-check-feedback">Please accept the policy to continue.</div>
         <button type="submit" class="btn btn-primary auth-login-btn">
-          Sign in
+          Create account
         </button>
-        <p class="auth-switch">New to Attendly? <a href="signup.html">Create an account</a></p>
+        <p class="auth-switch">Already have an account? <a href="login.html">Sign in</a></p>
       </form>
     </main>
   </div>
 
-  <!-- Forgot password placeholder modal -->
-  <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+  <!-- Biometric data policy placeholder modal -->
+  <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Forgot password?</h5>
+          <h5 class="modal-title" id="termsModalLabel">Biometric data policy</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p class="mb-0">Password reset isn't available in this prototype yet. Please contact your SSC officer to reset your password.</p>
+          <p>ATTENDLY stores a fingerprint template, never the raw scan. Your template is enrolled by an administrator and is used only to confirm identity at an event kiosk.</p>
+          <p class="mb-0">You can ask an SSC officer to withdraw your enrolment at any time. This placeholder stands in for the college's published policy.</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

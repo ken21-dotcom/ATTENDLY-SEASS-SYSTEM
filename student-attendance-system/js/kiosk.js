@@ -221,7 +221,7 @@
   }
 
   // ── Recording attendance (FR-005/006, BR-007/008) ──
-  function recordAttendance(student) {
+  async function recordAttendance(student) {
     const event = getEvents().find((item) => item.id === currentEventId);
     if (getEventPhase(event) !== 'live') return 'unavailable';
     const attendance = getAttendance();
@@ -229,16 +229,35 @@
     if (already) return 'duplicate';
 
     const now = new Date();
-    attendance.push({
-      id: generateId('att'),
-      studentId: student.id,
-      eventId: currentEventId,
-      date: todayStr(),               // FIX: local date, not UTC
-      time: now.toTimeString().slice(0, 5),
-      status: 'present',
+
+    // Backend mode: the server is the source of truth. Post first and only
+    // record locally once it agrees, so a rejected check-in never shows the
+    // student a success screen. Only numeric ids exist server-side, so a
+    // local (string) id means we are still on demo data.
+    let record;
+    if (isApiEnabled() && typeof currentEventId === 'number' && typeof student.id === 'number') {
+      try {
+        record = await api.checkIn(currentEventId, student.id, 'fingerprint');
+      } catch (err) {
+        if (err.code === 'duplicate_checkin') return 'duplicate';
+        return 'server-error';
+      }
+    }
+
+    // The server row already carries id/date/time/status in the shapes the
+    // reports expect, so reuse it and keep the two flag fields demo-only.
+    attendance.push(Object.assign({
       excused: false,
       excuseReason: ''
-    });
+    }, record || {
+      id: generateId('att'),
+      date: todayStr(),               // local date, not UTC
+      time: now.toTimeString().slice(0, 5),
+      status: 'present'
+    }, {
+      studentId: student.id,
+      eventId: currentEventId
+    }));
     setAttendance(attendance);
     return 'ok';
   }
@@ -249,8 +268,9 @@
     'already':     'exclamation-triangle-fill',
     'no-match':    'x-circle-fill',
     'not-enrolled': 'x-circle-fill',
-    'device-error': 'x-circle-fill',
-    'no-event':     'info-circle-fill',
+'device-error': 'x-circle-fill',
+    'server-error': 'x-circle-fill',
+    'no-event':    'info-circle-fill',
   };
 
   function showResult(type, title, message, meta) {
@@ -301,7 +321,7 @@
         return;
       }
 
-      const outcome = recordAttendance(student);
+      const outcome = await recordAttendance(student);
       if (outcome === 'unavailable') {
         showResult('no-event', 'Check-in unavailable', 'This event is not accepting check-ins right now.', 'Choose an event marked “Check-in open”.');
         setStatus('attention', 'Check-in unavailable', 'Choose another active event.');
@@ -310,6 +330,9 @@
       if (outcome === 'duplicate') {
         showResult('already', 'Already checked in', `${student.name} is already present for this event.`, '');
         setStatus('attention', 'Already checked in', 'No action needed.');
+      } else if (outcome === 'server-error') {
+        showResult('server-error', 'Server unreachable', 'The attendance server did not accept this check-in. Please retry, or see the SSC booth.', '');
+        setStatus('error', 'Not recorded', 'The server did not confirm this check-in.');
       } else {
         showResult(
           'success',
@@ -337,7 +360,7 @@
   }
 
   // ── Manual override (fallback when no enrolled fingerprint) ──
-  function runManualEntry(rawId) {
+  async function runManualEntry(rawId) {
     const id = (rawId || '').trim();
     const event = getEvents().find((e) => e.id === currentEventId);
     if (!event || !id) return;
@@ -351,10 +374,13 @@
       showToast('error', 'Student not found.');
       return;
     }
-    const outcome = recordAttendance(student);
+    const outcome = await recordAttendance(student);
     if (outcome === 'duplicate') {
       showToast('warning', `${student.name} is already checked in.`);
       showResult('already', 'Already checked in', `${student.name} is already present for this event.`, '');
+    } else if (outcome === 'server-error') {
+      showToast('error', 'The server did not record this check-in. Please retry.');
+      showResult('server-error', 'Server unreachable', 'The attendance server did not accept this check-in. Please retry, or see the SSC booth.', '');
     } else {
       showResult(
         'success',
@@ -442,7 +468,12 @@
     if (els.manualForm) {
       els.manualForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        runManualEntry(els.manualId.value);
+        // Awaited via .catch so a rejected server call surfaces on the
+        // kiosk rather than as an unhandled promise rejection.
+        runManualEntry(els.manualId.value).catch((err) => {
+          showToast('error', 'The server did not record this check-in. Please retry.');
+          showResult('server-error', 'Server unreachable', 'The attendance server did not accept this check-in. Please retry, or see the SSC booth.', '');
+        });
         els.manualId.value = '';
       });
     }

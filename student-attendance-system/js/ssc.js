@@ -1,4 +1,9 @@
-// SSC Officer page-specific logic
+/* ============================================================
+   SSC Officer — all ssc-officer page logic
+   ------------------------------------------------------------
+   Loaded only by pages/ssc-officer/*.html. Administrator pages
+   load administrator-panel.js instead.
+   ============================================================ */
 
 document.addEventListener('DOMContentLoaded', function() {
   const user = requireAuth('ssc-officer');
@@ -238,7 +243,7 @@ function registerBiometric(event) {
     const audit = getBiometricAudit();
     audit.unshift({ id: generateId('audit'), action: registrationStatus === 'enrolled' ? 'enrollment' : 'quality-failure', studentId, adminId: getCurrentUser().id, date: registeredAt, device: 'Enrollment Station 01', quality, result: registrationStatus });
     setBiometricAudit(audit);
-    status.innerHTML = `<span class="${registrationStatus === 'enrolled' ? 'text-success' : 'text-warning'}"><i class="bi bi-${registrationStatus === 'enrolled' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>${student.name}'s template quality is ${quality}. Status: ${registrationStatus}.</span>`;
+    status.innerHTML = `<span class="${registrationStatus === 'enrolled' ? 'text-success' : 'text-warning'}"><i class="bi bi-${registrationStatus === 'enrolled' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>${escapeHtml(student.name)}'s template quality is ${escapeHtml(quality)}. Status: ${escapeHtml(registrationStatus)}.</span>`;
     document.getElementById('biometricSubmit').disabled = false;
     renderBiometricTable();
     showToast('success', 'Fingerprint registration complete.');
@@ -329,7 +334,7 @@ function loadEventsTable() {
       <td>${escapeHtml(event.location)}</td>
       <td>
         <div class="event-badges">
-          <span class="event-type-badge ${type}"><i class="bi bi-${type === 'major' ? 'star' : 'circle'}"></i> ${type}</span>
+          <span class="event-type-badge ${safeToken(type, ['major', 'minor'])}"><i class="bi bi-${type === 'major' ? 'star' : 'circle'}"></i> ${escapeHtml(type)}</span>
           <span class="mandatory-badge ${mandatory ? 'yes' : 'no'}"><i class="bi bi-${mandatory ? 'exclamation-circle' : 'info-circle'}"></i> ${mandatory ? 'Mandatory' : 'Optional'}</span>
           ${recurring ? '<span class="recurring-badge"><i class="bi bi-arrow-repeat"></i> Every ' + escapeHtml(recurring.day) + '</span>' : ''}
         </div>
@@ -375,6 +380,7 @@ function bindEventFormHandlers() {
       };
       events.push(newEvent);
       setEvents(events);
+      syncEventToServer(newEvent);
       const announcements = getAnnouncements();
       announcements.unshift({
         id: generateId('notice'),
@@ -426,8 +432,37 @@ function deleteEvent(eventId) {
   setEvents(events);
   let attendance = getAttendance().filter(a => a.eventId !== eventId);
   setAttendance(attendance);
+  syncEventDeleteToServer(eventId);
   showToast('success', 'Event deleted.');
   loadEventsTable();
+}
+
+/**
+ * Push a newly created event to the backend and adopt the row the server
+ * returns, so its id is the database id and later edits/deletes line up.
+ *
+ * Runs only in backend mode; a failure is reported but the local event is
+ * left in place, because dropping it would lose what the officer typed.
+ */
+function syncEventToServer(event) {
+  if (!isApiEnabled()) return;
+  api.createEvent(event)
+    .then((saved) => {
+      const all = getEvents().map((e) => (e.id === event.id ? Object.assign({}, e, saved) : e));
+      setEvents(all);
+      loadEventsTable();
+    })
+    .catch((err) => {
+      showToast('error', 'Event saved locally only — the server rejected it: ' + err.message);
+    });
+}
+
+/** Mirror a deletion server-side. Only numeric ids exist in the database. */
+function syncEventDeleteToServer(eventId) {
+  if (!isApiEnabled() || typeof eventId !== 'number') return;
+  api.deleteEvent(eventId).catch((err) => {
+    showToast('error', 'Deleted here, but not on the server: ' + err.message);
+  });
 }
 
 function editEvent(eventId) {
@@ -459,7 +494,7 @@ function loadSanctionsTable() {
       <td>${student ? escapeHtml(student.name) : 'Unknown'}</td>
       <td>${escapeHtml(sanction.description)}</td>
       <td>${severityBadge(sanction.severity)}</td>
-      <td><span class="badge bg-${sanction.status === 'active' ? 'danger' : 'secondary'}">${sanction.status}</span></td>
+      <td><span class="badge bg-${sanction.status === 'active' ? 'danger' : 'secondary'}">${escapeHtml(sanction.status)}</span></td>
       <td>
         <button class="btn btn-sm btn-outline-secondary" onclick="toggleSanctionStatus('${escapeHtml(sanction.id)}')">Toggle Status</button>
         <button class="btn btn-sm btn-outline-danger" onclick="deleteSanction('${escapeHtml(sanction.id)}')">Delete</button>
@@ -492,14 +527,14 @@ function populateSanctionStudentSelect() {
   const select = document.getElementById('sanctionStudent');
   if (!select) return;
   const students = getUsers().filter(u => u.role === 'student');
-  select.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  select.innerHTML = students.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`).join('');
 }
 
 function populateReportEventSelect() {
   const select = document.getElementById('reportEvent');
   if (!select) return;
   const events = getEvents();
-  select.innerHTML = events.map(e => `<option value="${e.id}">${e.name} - ${e.date}</option>`).join('');
+  select.innerHTML = events.map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)} - ${formatDate(e.date)}</option>`).join('');
 }
 
 function generateAttendanceReport() {
@@ -515,8 +550,8 @@ function generateAttendanceReport() {
     row.innerHTML = `
       <td>${student ? escapeHtml(student.name) : 'Unknown'}</td>
       <td>${formatDate(record.date)}</td>
-      <td>${record.time ?? '—'}</td>
-      <td><span class="badge bg-${record.status === 'present' ? 'success' : record.status === 'late' ? 'warning text-dark' : 'danger'}">${record.status}</span></td>
+      <td>${escapeHtml(record.time ?? '—')}</td>
+      <td><span class="badge bg-${record.status === 'present' ? 'success' : record.status === 'late' ? 'warning text-dark' : 'danger'}">${escapeHtml(record.status)}</span></td>
     `;
     tbody.appendChild(row);
   });
@@ -536,7 +571,7 @@ function generateSanctionReport() {
       <td>${student ? escapeHtml(student.name) : 'Unknown'}</td>
       <td>${escapeHtml(sanction.description)}</td>
       <td>${severityBadge(sanction.severity)}</td>
-      <td><span class="badge bg-${sanction.status === 'active' ? 'danger' : 'secondary'}">${sanction.status}</span></td>
+      <td><span class="badge bg-${sanction.status === 'active' ? 'danger' : 'secondary'}">${escapeHtml(sanction.status)}</span></td>
     `;
     tbody.appendChild(row);
   });

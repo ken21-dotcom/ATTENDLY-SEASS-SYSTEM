@@ -1,138 +1,80 @@
 /* ════════════════════════════════════════════════════════════
-   DASHBOARD HOVER TOP-ACCENT BARS — dashboard-only variant.
+   DASHBOARD HOVER TOP-ACCENT BARS — unified hover-reveal system.
 
    Applied via the `dashboard-hover-accent` modifier class on the
    three dashboard pages (Student / SSC / Admin) and every subpage
-   that uses the shared card system. Overrides the shared accent-bar
-   rules (.stat-card, .dashboard-card, .dash-panel, .activity-panel,
-   .role-card, .role-action-card) so the top accent bar is a HOVER
-   REVEAL: hidden at rest, flat solid green growing in from center on
-   hover, spanning the full card width and curving into the rounded
-   top corners.
+   that uses the shared card system.
 
-   Static, non-interactive cards (.student-id-card, .appeal-guide,
-   .biometric-guide) keep their permanent accent bars and are
-   excluded from the hover-reveal.
+   The top accent bar is a HOVER REVEAL:
+   - Hidden at rest (opacity: 0, scaleX from the --accent-bar-rest-scale token)
+   - On hover: flat solid green (--accent-bar-fill) grows in smoothly
+     from center, spanning the full card width and curving into
+     the --radius-card top corners
+   - Subtle lift (-2px), enhanced shadow, and brand border highlight
 
-   EVERYTHING here is scoped to body.dashboard-hover-accent, so
-   non-dashboard pages keep whatever accent behavior their base
-   component rules already give them.
+   Every value below comes from the --accent-bar-* / --radius-card tokens,
+   the same ones the equivalent rules in role-dashboard.css and
+   student-dashboard.css read, so all four card families reveal identically
+   whether or not a page carries this modifier.
    ════════════════════════════════════════════════════════════ */
 
-/* ── Hide base accent bars when hover-reveal bars are active ──
-   When dashboard-hover-accent is active, the base ::before bars from
-   student-dashboard.css and role-dashboard.css are hidden. This prevents
-   visual artifacts where two bars overlap at the rounded corners. ── */
-.dashboard-hover-accent .dashboard-card::before,
-.dashboard-hover-accent .dash-panel::before,
-.dashboard-hover-accent .activity-panel::before,
-.dashboard-hover-accent .role-card::before,
-.dashboard-hover-accent .role-action-card::before {
-  display: none;
-}
-
-/* ── Ensure cards have proper positioning for accent bar ──
-   IMPORTANT: We only add overflow:hidden to stat-cards (which never have
-   section kickers above them). For other cards, the accent bar's own
-   border-radius will handle the rounding, and we avoid clipping section
-   kickers that are positioned above the card border.
-
-   All cards with the hover accent bar need extra top padding to ensure
-   content doesn't get clipped by the 5px ::before bar. ── */
+/* ── Positioning & overflow for all dashboard cards ── */
 .dashboard-hover-accent .stat-card,
 .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide),
 .dashboard-hover-accent .dash-panel,
 .dashboard-hover-accent .activity-panel,
-.dashboard-hover-accent .role-card,
-.dashboard-hover-accent .role-action-card {
+.dashboard-hover-accent .role-card {
   position: relative;
-}
-
-/* Only stat-cards get overflow:hidden since they never have section kickers */
-.dashboard-hover-accent .stat-card {
   overflow: hidden;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-default);
+  transition: box-shadow var(--transition-normal) var(--ease),
+              transform var(--transition-normal) var(--ease),
+              border-color var(--transition-normal) var(--ease);
 }
 
-/* Fix content clipping: add extra top padding to clear the 5px accent bar.
-   Dashboard cards and panels that already have padding get 6px added to their
-   existing top padding to ensure the card-heading and content clear the bar. */
-.dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide),
-.dashboard-hover-accent .dash-panel,
-.dashboard-hover-accent .activity-panel {
-  padding-top: calc(var(--card-padding-top, 22px) + 6px) !important;
-}
-
-/* Role cards (SSC/Admin dashboards) also need clearance */
-.dashboard-hover-accent .role-card,
-.dashboard-hover-accent .role-action-card {
-  padding-top: calc(var(--card-padding-top, 24px) + 6px) !important;
-}
-
-/* ── Bar shell shared by every bar-carrying dashboard card.
-   Flat solid green — no gradient, no glow. Hidden at rest. ── */
+/* ── Bar shell — hidden at rest, scales in from center on hover ── */
 .dashboard-hover-accent .stat-card::before,
 .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide)::before,
 .dashboard-hover-accent .dash-panel::before,
 .dashboard-hover-accent .activity-panel::before,
-.dashboard-hover-accent .role-card::before,
-.dashboard-hover-accent .role-action-card::before {
+.dashboard-hover-accent .role-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  background: var(--brand-500);
+  height: var(--accent-bar-height);
+  background: var(--accent-bar-fill);
   opacity: 0;
-  transform: scaleX(.15);
+  transform: scaleX(var(--accent-bar-rest-scale));
   transform-origin: center;
-  transition: opacity 200ms ease-out,
-              transform 240ms ease-out;
-  z-index: 1;
+  transition: var(--accent-bar-transition);
+  z-index: 2;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
 
-/* ── Bar hugs each card type's own rounded top corners ── */
-.dashboard-hover-accent .stat-card::before {
-  border-radius: var(--stat-radius) var(--stat-radius) 0 0;
-}
-
-.dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide)::before,
-.dashboard-hover-accent .dash-panel::before,
-.dashboard-hover-accent .activity-panel::before,
-.dashboard-hover-accent .role-card::before,
-.dashboard-hover-accent .role-action-card::before {
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-/* ── Hover: fade the solid full-width bar in ── */
+/* ── Hover: reveal the top accent bar and lift the card ── */
 @media (hover: hover) and (pointer: fine) {
   .dashboard-hover-accent .stat-card:hover::before,
   .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover::before,
   .dashboard-hover-accent .dash-panel:hover::before,
   .dashboard-hover-accent .activity-panel:hover::before,
-  .dashboard-hover-accent .role-card:hover::before,
-  .dashboard-hover-accent .role-action-card:hover::before {
+  .dashboard-hover-accent .role-card:hover::before {
     opacity: 1;
     transform: scaleX(1);
   }
-}
 
-/* ── Unified hover styling: soft green gradient + lift effect ── */
-@media (hover: hover) and (pointer: fine) {
   .dashboard-hover-accent .stat-card:hover,
   .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover,
   .dashboard-hover-accent .dash-panel:hover,
   .dashboard-hover-accent .activity-panel:hover,
-  .dashboard-hover-accent .role-card:hover,
-  .dashboard-hover-accent .role-action-card:hover {
-    background: linear-gradient(135deg, #ffffff 0%, var(--brand-50) 45%, #e8f5ee 100%);
-    box-shadow: var(--shadow-card-hover), 0 1px 8px rgba(14, 159, 110, .12);
+  .dashboard-hover-accent .role-card:hover {
+    box-shadow: var(--shadow-card-hover), 0 1px 8px rgba(14, 159, 110, .10);
     transform: translateY(-2px);
     border-color: var(--brand-200);
   }
 }
-
-
 
 /* ── Reduced motion: fade in place, no scale grow ── */
 @media (prefers-reduced-motion: reduce) {
@@ -140,21 +82,25 @@
   .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide)::before,
   .dashboard-hover-accent .dash-panel::before,
   .dashboard-hover-accent .activity-panel::before,
-  .dashboard-hover-accent .role-card::before,
-  .dashboard-hover-accent .role-action-card::before {
+  .dashboard-hover-accent .role-card::before {
     transition: none;
+    transform: none;
   }
 
   .dashboard-hover-accent .stat-card:hover::before,
   .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover::before,
   .dashboard-hover-accent .dash-panel:hover::before,
   .dashboard-hover-accent .activity-panel:hover::before,
-  .dashboard-hover-accent .role-card:hover::before,
-  .dashboard-hover-accent .role-action-card:hover::before {
+  .dashboard-hover-accent .role-card:hover::before {
+    opacity: 1;
     transform: none;
   }
 
-  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover {
+  .dashboard-hover-accent .stat-card:hover,
+  .dashboard-hover-accent .dashboard-card:not(.appeal-guide):not(.biometric-guide):hover,
+  .dashboard-hover-accent .dash-panel:hover,
+  .dashboard-hover-accent .activity-panel:hover,
+  .dashboard-hover-accent .role-card:hover {
     transform: none;
   }
 }

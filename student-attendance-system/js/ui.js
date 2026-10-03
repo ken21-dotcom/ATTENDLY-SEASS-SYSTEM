@@ -22,6 +22,24 @@ function escapeHtml(str) {
 }
 
 /**
+ * Reduce a value to a safe CSS class token.
+ *
+ * HTML-escaping alone is not the right tool for a class attribute. The
+ * escaping stops a value from closing the attribute, but it still lets
+ * arbitrary *tokens* through, so a record could inject styling classes
+ * it has no business owning (layout overrides, display:none, and so on).
+ * This position allowlists the exact tokens it accepts and falls back to
+ * a neutral one otherwise.
+ *
+ * @param {*} value
+ * @param {string[]} allowed - exact tokens permitted for this position
+ * @returns {string}
+ */
+function safeToken(value, allowed) {
+  return allowed.includes(value) ? value : 'unknown';
+}
+
+/**
  * Display a toast notification. Falls back to a plain DOM
  * element when Bootstrap's JS is unavailable.
  *
@@ -63,10 +81,14 @@ function showToast(type, message) {
    Theme Management
    ============================================================ */
 
-/** Read the saved theme and apply it before first paint. */
+/** Read the saved theme and apply it before first paint.
+ * Auth screens intentionally stick to the dark campus palette by default to
+ * match the last approved identity treatment. */
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', savedTheme);
+  const isAuthPage = /\/(login|signup)\.html$/.test(window.location.pathname);
+  const savedTheme = localStorage.getItem('theme');
+  const resolvedTheme = savedTheme || (isAuthPage ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', resolvedTheme);
 }
 
 /** Toggle between light and dark mode, persist the choice. */
@@ -96,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   initResponsiveShell();
   initNotifications();
+  initUserDropdown();
 });
 
 /**
@@ -394,7 +417,7 @@ function initGroupedStudentList(opts) {
   }
   if (yearSel) {
     yearSel.innerHTML = '<option value="">All Year Levels</option>' +
-      taxonomy.yearLevels.map(y => `<option value="${y}">${escapeHtml(getStudentYearLabel(y))}</option>`).join('') +
+      taxonomy.yearLevels.map(y => `<option value="${escapeHtml(y)}">${escapeHtml(getStudentYearLabel(y))}</option>`).join('') +
       `<option value="${UNASSIGNED}">${UNASSIGNED}</option>`;
   }
 
@@ -570,7 +593,7 @@ function initOrgModalSelects(deptId, courseId, yearId, initial) {
   function fillYear(value) {
     if (!yearSel) return;
     yearSel.innerHTML = '<option value="">Select year…</option>' +
-      taxonomy.yearLevels.map(y => `<option value="${y}">${escapeHtml(getStudentYearLabel(y))}</option>`).join('');
+      taxonomy.yearLevels.map(y => `<option value="${escapeHtml(y)}">${escapeHtml(getStudentYearLabel(y))}</option>`).join('');
     yearSel.value = value || '';
   }
 
@@ -595,4 +618,161 @@ function yearBadge(student) {
   const cls      = assigned ? 'year-badge' : 'year-badge year-unassigned';
   const label    = assigned ? getStudentYearLabel(org.yearLevel) : UNASSIGNED;
   return `<span class="${cls}">${escapeHtml(label)}</span>`;
+}
+
+
+/* ============================================================
+   User Account Dropdown
+   ------------------------------------------------------------
+   Shared open/close behaviour for the account menu in the topbar.
+   Every role dashboard ships the same markup, so the wiring lives
+   here instead of being copied into each page.
+   ============================================================ */
+
+/**
+ * Wire the topbar account dropdown: the toggle opens and closes the
+ * menu, a click anywhere outside dismisses it, and Escape closes it
+ * and returns focus to the toggle.
+ */
+function initUserDropdown() {
+  const toggle = document.getElementById('userDropdownToggle');
+  const menu = document.getElementById('userDropdownMenu');
+  if (!toggle || !menu) return;
+
+  toggle.addEventListener('click', function (event) {
+    event.stopPropagation();
+    const open = menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+
+  document.addEventListener('click', function () {
+    menu.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+  });
+
+  menu.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    menu.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.focus();
+  });
+}
+
+
+/* ============================================================
+   Global Search
+   ------------------------------------------------------------
+   Cross-entity search over the topbar search box. The markup and
+   styling are shared; only the destination for each result group is
+   role-specific, so callers pass a links map.
+   ============================================================ */
+
+/**
+ * Wire the global search box and render grouped results.
+ *
+ * @param {Object} links — role-specific destinations, e.g.
+ *   { students: 'admin-manage-students.html', events: 'admin-reports.html' }
+ */
+function initGlobalSearch(links) {
+  const input = document.getElementById('globalSearchInput');
+  const results = document.getElementById('searchResults');
+  const clear = document.getElementById('searchClear');
+  const wrap = document.getElementById('globalSearch');
+  if (!input || !results) return;
+
+  const targets = Object.assign({
+    students: '#',
+    officers: '#',
+    events: '#',
+    sanctions: '#',
+  }, links || {});
+
+  function close() {
+    results.classList.remove('open');
+  }
+
+  function render(query) {
+    const users = getUsers();
+    const events = getEvents();
+    const sanctions = getSanctions();
+    let html = '';
+
+    const students = users.filter(u => u.role === 'student'
+      && (u.name.toLowerCase().includes(query) || u.email.toLowerCase().includes(query)));
+    if (students.length) {
+      html += '<div class="search-result-group"><i class="bi bi-people"></i> Students</div>';
+      students.slice(0, 5).forEach(s => {
+        html += '<a class="search-result-item" href="' + escapeHtml(targets.students) + '"><i class="bi bi-person"></i> '
+          + escapeHtml(s.name)
+          + ' <small style="color:var(--color-text-muted);margin-left:auto">' + escapeHtml(s.email) + '</small></a>';
+      });
+    }
+
+    const officers = users.filter(u => u.role === 'ssc-officer'
+      && (u.name.toLowerCase().includes(query) || u.email.toLowerCase().includes(query)));
+    if (officers.length) {
+      html += '<div class="search-result-group"><i class="bi bi-person-badge"></i> Officers</div>';
+      officers.slice(0, 5).forEach(o => {
+        html += '<a class="search-result-item" href="' + escapeHtml(targets.officers) + '"><i class="bi bi-person-badge"></i> '
+          + escapeHtml(o.name)
+          + ' <small style="color:var(--color-text-muted);margin-left:auto">' + escapeHtml(o.email) + '</small></a>';
+      });
+    }
+
+    const matchedEvents = events.filter(e => e.name.toLowerCase().includes(query)
+      || e.location.toLowerCase().includes(query));
+    if (matchedEvents.length) {
+      html += '<div class="search-result-group"><i class="bi bi-calendar-event"></i> Events</div>';
+      matchedEvents.slice(0, 5).forEach(ev => {
+        html += '<a class="search-result-item" href="' + escapeHtml(targets.events) + '"><i class="bi bi-calendar-event"></i> '
+          + escapeHtml(ev.name)
+          + ' <small style="color:var(--color-text-muted);margin-left:auto">' + escapeHtml(ev.date) + '</small></a>';
+      });
+    }
+
+    const matchedSanctions = sanctions.filter(s => {
+      const student = users.find(u => u.id === s.studentId);
+      const name = student ? student.name.toLowerCase() : '';
+      return name.includes(query)
+        || s.description.toLowerCase().includes(query)
+        || s.severity.toLowerCase().includes(query);
+    });
+    if (matchedSanctions.length) {
+      html += '<div class="search-result-group"><i class="bi bi-shield-exclamation"></i> Sanctions</div>';
+      matchedSanctions.slice(0, 5).forEach(s => {
+        const student = users.find(u => u.id === s.studentId);
+        html += '<a class="search-result-item" href="' + escapeHtml(targets.sanctions) + '"><i class="bi bi-shield-exclamation"></i> '
+          + escapeHtml(student ? student.name : 'Unknown') + ' — ' + escapeHtml(s.description)
+          + ' <small style="color:var(--color-text-muted);margin-left:auto">' + escapeHtml(s.severity) + '</small></a>';
+      });
+    }
+
+    if (!html) html = '<div class="search-no-results">No results found for "' + escapeHtml(query) + '"</div>';
+    results.innerHTML = html;
+    results.classList.add('open');
+  }
+
+  input.addEventListener('input', function () {
+    const query = this.value.trim().toLowerCase();
+    if (clear) clear.classList.toggle('visible', query.length > 0);
+    if (query.length < 2) { close(); return; }
+    render(query);
+  });
+
+  input.addEventListener('focus', function () {
+    if (this.value.trim().length >= 2) results.classList.add('open');
+  });
+
+  document.addEventListener('click', function (event) {
+    if (wrap && !wrap.contains(event.target)) close();
+  });
+
+  if (clear) {
+    clear.addEventListener('click', function () {
+      input.value = '';
+      close();
+      this.classList.remove('visible');
+      input.focus();
+    });
+  }
 }

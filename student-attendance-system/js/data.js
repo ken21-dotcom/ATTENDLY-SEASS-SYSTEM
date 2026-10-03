@@ -632,17 +632,43 @@ function clearSession() {
 }
 
 /**
- * Resolve the currently-logged-in user by cross-referencing the
- * session record against the users collection. Returns null when
- * the session is missing or the user was deleted.
+ * Discard everything this app stored and re-seed the demo dataset.
+ *
+ * Needed because hydrateFromApi() overwrites the users, events,
+ * attendance and sanctions keys with database rows. Clearing them alone
+ * would not restore a full demo dataset: the seed blocks are gated on
+ * dummyDataVersion, so the one-time migrations would be skipped and the
+ * accounts they add would stay missing. Resetting the version as well
+ * replays every migration.
+ *
+ * Safe to call at any time; the next page load reseeds.
+ */
+function resetDemoData() {
+  Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+  initMockData();
+}
+
+/**
+ * Resolve the currently-logged-in user.
+ *
+ * Offline mode: the session record is cross-referenced against the
+ * localStorage users collection, so a deleted user correctly resolves
+ * to null.
+ *
+ * Backend mode: the signed-in user lives in the database, not in
+ * localStorage, so there is nothing to cross-reference — falling back
+ * to the cached session record is what keeps requireAuth() working.
+ * Without this, an API login would resolve to null and every role page
+ * would bounce straight back to the login screen.
  *
  * @returns {object|null} full user object (including role)
  */
 function getCurrentUser() {
   const session = getSession();
   if (!session) return null;
-  const users = getUsers();
-  return users.find(u => u.id === session.id) || null;
+  const cached = getUsers().find(u => u.id === session.id);
+  if (cached) return cached;
+  return isApiEnabled() ? session : null;
 }
 
 

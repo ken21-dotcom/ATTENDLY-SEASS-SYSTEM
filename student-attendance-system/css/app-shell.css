@@ -1,13 +1,14 @@
 /* ========================================
    Unified App Shell — ATTENDLY
-   Single polished shell for Student, SSC Officer, Administrator.
+   Single polished shell for SSC Officer, Administrator and Student.
    Loads after variables.css and reset.css; before any page-specific sheets.
-   Selectors are grouped to cover all three shell class families:
-   .app-* (canonical), .role-* (admin/SSC), .student-* (student portal).
+   Two shell class families are live here: .role-* (admin/SSC) and .student-*.
+   A third canonical .app-* family was removed — no page or script ever puts
+   an .app-* class on an element, so every rule below now targets only the
+   two families the markup actually uses.
    ======================================== */
 
 /* ── Shared page backgrounds ── */
-.app-shell-page,
 .role-dashboard-page,
 .student-dashboard-page,
 .student-subpage-page {
@@ -16,38 +17,19 @@
   color: var(--color-text-primary);
 }
 @media (max-width: 768px) {
-  .app-shell-page,
   .role-dashboard-page,
   .student-dashboard-page,
   .student-subpage-page { background-attachment: scroll; }
 }
 
-/* ── Gentle section entrance animation ── */
-.app-shell-main > section,
-.app-shell-main > .dashboard-intro,
-.app-shell-main > .subpage-intro {
-  animation: appShellRise .22s var(--ease) both;
-}
-.app-shell-main > section:nth-of-type(1),
-.app-shell-main > .dashboard-intro { animation-delay: .03s; }
-.app-shell-main > section:nth-of-type(2) { animation-delay: .07s; }
-.app-shell-main > section:nth-of-type(3) { animation-delay: .11s; }
-@keyframes appShellRise {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .app-shell-main > section,
-  .app-shell-main > .dashboard-intro,
-  .app-shell-main > .subpage-intro { animation: none; }
-}
+/* NOTE: the ".app-shell-main > section" entrance animation and its
+   appShellRise keyframes were removed with the .app-* family — no element ever
+   carried .app-shell-main, so the rule could never match. */
 
 /* ── Shell layout (Sidebar + Main) ── */
-.app-shell,
 .role-shell,
 .student-shell { display: flex; min-height: 100vh; }
 
-.app-sidebar,
 .role-sidebar,
 .student-sidebar {
   display: flex;
@@ -67,7 +49,6 @@
   border-right: 1px solid rgba(255,255,255,.04);
 }
 
-.app-brand,
 .role-brand,
 .student-brand {
   display: flex;
@@ -102,7 +83,6 @@
   }
 }
 
-.app-brand i,
 .role-brand i,
 .student-brand i {
   color: var(--brand-400);
@@ -111,12 +91,10 @@
   filter: drop-shadow(0 2px 8px rgba(79, 206, 159, .3));
 }
 @media (hover: hover) and (pointer: fine) {
-  .app-brand:hover i,
   .role-brand:hover i,
   .student-brand:hover i { color: var(--brand-100); transform: rotate(-12deg) scale(1.1); }
 }
 
-.app-profile,
 .role-profile,
 .student-profile {
   display: flex;
@@ -131,14 +109,12 @@
               transform var(--transition-fast) var(--ease);
 }
 @media (hover: hover) and (pointer: fine) {
-  .app-profile:hover,
   .role-profile:hover,
   .student-profile:hover {
     background: var(--color-bg-sidebar-hover);
     transform: translateX(3px);
   }
 }
-.app-avatar,
 .role-avatar,
 .profile-avatar {
   display: grid;
@@ -154,14 +130,12 @@
   transition: transform 180ms var(--ease), box-shadow 180ms var(--ease);
 }
 @media (hover: hover) and (pointer: fine) {
-  .app-profile:hover .app-avatar,
   .role-profile:hover .role-avatar,
   .student-profile:hover .profile-avatar {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(14,159,110,.45);
   }
 }
-.app-profile strong,
 .role-profile strong,
 .student-profile strong {
   display: block;
@@ -169,14 +143,12 @@
   font-weight: 600;
   color: #fff;
 }
-.app-profile small,
 .role-profile small,
 .student-profile small {
   display: block;
   color: var(--color-text-sidebar);
   font-size: .68rem;
 }
-.app-profile > i,
 .role-profile > i,
 .student-profile > i {
   margin-left: auto;
@@ -184,12 +156,9 @@
   font-size: .7rem;
 }
 
-.app-nav,
 .role-nav,
 .student-nav { display: grid; gap: 6px; }
 
-.app-nav a,
-.app-sidebar-action,
 .role-nav a,
 .role-sidebar-action,
 .student-nav a,
@@ -211,8 +180,6 @@
               transform var(--transition-normal) var(--ease);
   font-weight: 500;
 }
-.app-nav a i,
-.app-sidebar-action i,
 .role-nav a i,
 .role-sidebar-action i,
 .student-nav a i,
@@ -223,8 +190,6 @@
   transition: transform var(--transition-fast) var(--ease-spring);
 }
 @media (hover: hover) and (pointer: fine) {
-  .app-nav a:hover,
-  .app-sidebar-action:hover,
   .role-nav a:hover,
   .role-sidebar-action:hover,
   .student-nav a:hover,
@@ -233,7 +198,6 @@
     color: #fff;
   }
 }
-.app-nav a.active,
 .role-nav a.active,
 .student-nav a.active {
   background: linear-gradient(135deg, rgba(14,159,110,.25) 0%, rgba(14,159,110,.15) 100%);
@@ -241,7 +205,6 @@
   font-weight: 600;
   position: relative;
 }
-.app-nav a.active::before,
 .role-nav a.active::before,
 .student-nav a.active::before {
   content: '';
@@ -255,7 +218,6 @@
   transform: translateY(-50%);
   box-shadow: 0 0 12px rgba(79, 206, 159, .5);
 }
-.app-sidebar-footer,
 .role-sidebar-footer,
 .student-sidebar-footer {
   display: grid;
@@ -265,8 +227,6 @@
   padding-top: 18px;
 }
 .logout-action { color: rgba(255,255,255,.66); }
-.app-nav a:focus-visible,
-.app-sidebar-action:focus-visible,
 .role-nav a:focus-visible,
 .role-sidebar-action:focus-visible,
 .student-nav a:focus-visible,
@@ -279,13 +239,11 @@
     color: #ffd7d7 !important;
     background: rgba(220,53,69,.14) !important;
   }
-  .app-sidebar-action:hover,
   .role-sidebar-action:hover,
   .sidebar-action:hover { background: var(--color-bg-sidebar-hover); color: #fff; }
 }
 
 /* ── Main content area ── */
-.app-main,
 .role-main,
 .student-main {
   flex: 1;
@@ -294,24 +252,23 @@
 }
 
 /* ── Glassy topbar (backdrop blur) ── */
-.app-topbar,
 .role-topbar,
 .student-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: var(--topbar-height);
-  border-bottom: 1px solid var(--color-border-default);
+  border-bottom: 1px solid rgba(130, 145, 136, .24);
   color: var(--color-text-muted);
   font-size: .78rem;
   position: sticky;
   top: 0;
-  background: rgba(248,250,249,.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(248,250,249,.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   z-index: 20;
+  box-shadow: 0 1px 0 rgba(20,34,27,.02);
 }
-.app-breadcrumb,
 .student-breadcrumb { margin-right: 8px; color: var(--color-text-muted); opacity: .8; }
 
 .topbar-actions {
@@ -422,25 +379,22 @@
 .text-link:hover { color: var(--brand-700); }
 button.text-link { display: inline; background: none; border: 0; padding: 0; cursor: pointer; }
 
-/* ── Role-specific avatar color classes ── */
-.student-avatar,
+/* ── SSC avatar colour ──
+ * .student-avatar and .admin-avatar were removed: no page puts either class on
+ * an element. Admin and SSC pages use `class="role-avatar ssc-avatar"`, and the
+ * student portal uses .profile-avatar (styled above). */
 .ssc-avatar { background: linear-gradient(135deg, var(--brand-400), var(--brand-600)); color: #fff; }
-.admin-avatar { background: linear-gradient(135deg, #64a9d7, #3a8ddb); color: #fff; }
 
 /* ── Responsive shell ── */
 @media (max-width: 950px) {
-  .app-sidebar,
   .role-sidebar,
   .student-sidebar { flex-basis: 196px; }
-  .app-main,
   .role-main,
   .student-main { padding: 0 24px; }
 }
 @media (max-width: 650px) {
-  .app-shell,
   .role-shell,
   .student-shell { display: block; }
-  .app-sidebar,
   .role-sidebar,
   .student-sidebar {
     min-height: auto;
@@ -448,32 +402,24 @@ button.text-link { display: inline; background: none; border: 0; padding: 0; cur
     padding: 16px;
     position: static;
   }
-  .app-brand,
   .role-brand,
   .student-brand { padding-bottom: 16px; }
-  .app-profile,
   .role-profile,
   .student-profile { padding: 12px 10px; }
-  .app-nav,
   .role-nav,
   .student-nav { grid-template-columns: repeat(3, 1fr); }
-  .app-nav a,
   .role-nav a,
   .student-nav a {
     justify-content: center;
     padding: 9px 5px;
     font-size: .68rem;
   }
-  .app-nav a i,
   .role-nav a i,
   .student-nav a i { display: none; }
-  .app-nav a.active::before,
   .role-nav a.active::before,
   .student-nav a.active::before { display: none; }
-  .app-sidebar-footer,
   .role-sidebar-footer,
   .student-sidebar-footer { display: none; }
-  .app-topbar,
   .role-topbar,
   .student-topbar { height: var(--topbar-height-mobile); }
   .dashboard-intro,
@@ -574,7 +520,7 @@ body.notification-open { overflow: hidden; }
   color: var(--color-text-primary);
   font-size: .78rem;
   outline: none;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .global-search input:focus {
   border-color: var(--bs-primary);
@@ -639,7 +585,7 @@ body.notification-open { overflow: hidden; }
   text-decoration: none;
   transition: background var(--transition-fast);
 }
-.search-result-item:hover { background: var(--color-bg-success-light); }
+.search-result-item:hover { background: var(--brand-50); }
 .search-result-item i { color: var(--bs-primary); font-size: .9rem; }
 .search-no-results {
   padding: 18px 14px;
@@ -662,17 +608,17 @@ body.notification-open { overflow: hidden; }
   cursor: pointer;
   font: inherit;
   font-size: .78rem;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-.user-dropdown-toggle:hover { border-color: var(--bs-primary); }
+.user-dropdown-toggle:hover { border-color: var(--bs-primary); box-shadow: var(--shadow-xs); }
 .user-dropdown-avatar {
   display: grid;
   place-items: center;
   width: 30px;
   height: 30px;
   border-radius: var(--radius-circle);
-  background: var(--color-bg-success-light);
-  color: var(--color-text-success);
+  background: linear-gradient(135deg, var(--brand-400), var(--brand-600));
+  color: #fff;
   font-size: .65rem;
   font-weight: 700;
 }
@@ -712,7 +658,7 @@ body.notification-open { overflow: hidden; }
   cursor: pointer;
   font: inherit;
 }
-.user-dropdown-item:hover { background: var(--color-bg-success-light); }
+.user-dropdown-item:hover { background: var(--brand-50); }
 .user-dropdown-item i { color: var(--color-text-muted); font-size: .9rem; width: 18px; }
 .user-dropdown-divider {
   height: 1px;
@@ -721,6 +667,12 @@ body.notification-open { overflow: hidden; }
 }
 .user-dropdown-item.logout { color: var(--color-text-danger); }
 .user-dropdown-item.logout i { color: var(--color-text-danger); }
+
+/* NOTE: the severity-badge rules that used to sit here
+   (.badge-warning-severity / .badge-probation-severity /
+   .badge-suspension-severity and the .badge base) moved to severity.css.
+   They are a data-display component emitted by severityBadge() in ui.js, not
+   page chrome, so they no longer belong in a file about the shell. */
 
 @media (max-width: 650px) {
   .global-search { display: none; }

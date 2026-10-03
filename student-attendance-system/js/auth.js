@@ -3,8 +3,9 @@
    ------------------------------------------------------------
    Handles the login form, demo-account shortcuts, password
    visibility toggle, and the hero carousel on the login page.
-   All credential checks run against localStorage mock data;
-   production would use a server-side auth endpoint.
+   Credentials are verified against the PHP backend when API_BASE_URL
+   is set in api.js; with no backend configured the app falls back to
+   the localStorage mock data so the prototype runs standalone.
    ============================================================ */
 
 /**
@@ -45,9 +46,18 @@ function pageUrl(role) {
 
 /**
  * Destroy the current session and return to the login page.
- * Called from every page's "Log out" button.
+ * Called from every page's "Log out" button. When the backend is
+ * configured the server session is ended too, though the local
+ * redirect never waits on it.
  */
 function logout() {
+  if (API_BASE_URL) {
+    api.logout();
+    // The cache now holds database rows, so drop it and reseed the demo
+    // dataset. Without this the offline prototype would come back with
+    // whatever the last session happened to have loaded.
+    if (typeof resetDemoData === 'function') resetDemoData();
+  }
   clearSession();
   window.location.href = pageUrl('login');
 }
@@ -84,40 +94,170 @@ function requireAuth(role = null) {
 }
 
 /**
- * Validate credentials against the users collection and
- * redirect on success. Shows a toast on failure.
+ * Validate credentials and redirect on success. Shows a toast on failure.
+ *
+ * When API_BASE_URL is configured the check runs against the PHP backend
+ * (bcrypt + server session). Otherwise it falls back to the localStorage
+ * mock data so the prototype still runs with no database.
  *
  * @param {string} email
  * @param {string} password
  */
-function loginWithCredentials(email, password) {
-  const users = getUsers();
+async function loginWithCredentials(email, password) {
+  var redirectFor = function (user) {
+    showToast('success', 'Login successful! Redirecting...');
+    setTimeout(function () {
+      window.location.href = pageUrl(user.role);
+    }, 700);
+  };
+
+  if (API_BASE_URL) {
+    try {
+      var user = await api.login(email, password);
+      // Cache the safe user record so role pages can render immediately;
+      // the authoritative session lives in the PHP cookie.
+      setSession(user);
+
+      // Pull the database's data into the localStorage cache the pages read.
+      // If some collections fail we say so rather than letting demo data
+      // pass for real data.
+      var hydration = await hydrateFromApi();
+      if (hydration.failed.length) {
+        showToast('error', 'Could not load from the server: ' + hydration.failed.join(', ') +
+          '. Showing locally cached data for those.');
+      }
+
+      redirectFor(user);
+      return;
+    } catch (error) {
+      // A rejected login is a real answer from the server — report it
+      // rather than silently retrying against local data.
+      if (error.code !== 'network_error' && error.code !== 'invalid_response') {
+        showToast('error', error.message);
+        return;
+      }
+      // Backend unreachable: fall through to the offline path below.
+    }
+  }
+
+  var users = getUsers();
   // Stored passwords are SHA-256 digests (see data.js hashPassword); the typed
   // password is hashed at compare time so plaintext never touches storage.
-  const user  = users.find(u => u.email === email && passwordMatches(password, u.password));
+  var localUser = users.find(u => u.email === email && passwordMatches(password, u.password));
 
-  if (!user) {
+  if (!localUser) {
     showToast('error', 'Invalid email or password');
     return;
   }
 
-  setSession(user);
-  showToast('success', 'Login successful! Redirecting...');
-  setTimeout(() => {
-    switch (user.role) {
-      case 'student':     window.location.href = pageUrl('student'); break;
-      case 'ssc-officer': window.location.href = pageUrl('ssc-officer'); break;
-      case 'admin':       window.location.href = pageUrl('admin'); break;
-    }
-  }, 700);
+  setSession(localUser);
+  redirectFor(localUser);
 }
 
 
 /* ============================================================
-   DOMContentLoaded — login page initialisation
+   Account registration — the sign-up page
+   ------------------------------------------------------------
+   Self-registration creates student accounts only. Officer and
+   administrator accounts are issued by an administrator from
+   admin-manage-officers, so there is deliberately no role choice here.
+
+   Like the rest of the app's writes this is local-only: there is no
+   signup endpoint, and POST /users/students requires a student ID
+   number and section that this form does not ask for (see the sync
+   matrix in api.js). Inventing those would put fabricated identity
+   data into the database.
+   ============================================================ */
+
+/** Minimum password length accepted at sign-up. */
+var SIGNUP_PASSWORD_MIN = 8;
+
+/**
+ * Score a password 0–4 for the strength meter.
+ * 0 is empty, 1 is below the length floor, and 2–4 count how many of
+ * the four character classes (lower, upper, digit, symbol) are present.
+ *
+ * @param {string} value
+ * @returns {number} 0–4
+ */
+function scorePassword(value) {
+  if (!value) return 0;
+  if (value.length < SIGNUP_PASSWORD_MIN) return 1;
+
+  var classes = 0;
+  if (/[a-z]/.test(value)) classes++;
+  if (/[A-Z]/.test(value)) classes++;
+  if (/\d/.test(value)) classes++;
+  if (/[^A-Za-z0-9]/.test(value)) classes++;
+
+  return Math.min(4, 1 + classes);
+}
+
+/**
+ * Create a student account and sign the new student in.
+ *
+ * @param {{name: string, email: string, password: string,
+ *          department?: string, course?: string, yearLevel?: string}} details
+ * @returns {boolean} true when the account was created
+ */
+function registerAccount(details) {
+  var name     = String(details.name || '').trim();
+  var email    = String(details.email || '').trim().toLowerCase();
+  var password = String(details.password || '');
+
+  var users = getUsers();
+  var taken = users.some(function (u) {
+    return String(u.email || '').toLowerCase() === email;
+  });
+
+  if (taken) {
+    showToast('error', 'An account with that email already exists.');
+    return false;
+  }
+
+  // Same shape as a seeded student record (data.js getDemoStudentCohort):
+  // a hashed password, never plaintext, and org fields defaulted to
+  // UNASSIGNED so grouping in the student lists always has a bucket.
+  var account = {
+    id:         generateId('stu'),
+    name:       name,
+    email:      email,
+    password:   hashPassword(password),
+    role:       'student',
+    department: details.department || UNASSIGNED,
+    course:     details.course || UNASSIGNED,
+    yearLevel:  details.yearLevel || UNASSIGNED,
+  };
+
+  setUsers(users.concat([account]));
+  setSession(account);
+
+  showToast('success', 'Account created! Redirecting...');
+  setTimeout(function () {
+    window.location.href = pageUrl(account.role);
+  }, 700);
+
+  return true;
+}
+
+
+/* ============================================================
+   DOMContentLoaded — login and sign-up page initialisation
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', function () {
+  // ── Already signed in? Skip the auth screens. ──
+  // Without this, a signed-in user can sign up again and silently create
+  // a second account while a session is already open for the first one.
+  const signupForm = document.getElementById('signupForm');
+  if (signupForm) {
+    const signedIn = getCurrentUser();
+    if (signedIn) {
+      window.location.replace(pageUrl(signedIn.role));
+      return;
+    }
+  }
+
   // ── Demo account quick-login buttons ──
   document.querySelectorAll('[data-demo-email]').forEach(function (button) {
     button.addEventListener('click', function () {
@@ -136,23 +276,157 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ── Password visibility toggle (eye / eye-slash) ──
-  const passwordToggle     = document.getElementById('passwordToggle');
-  const passwordField      = document.getElementById('login-password-field');
-  const passwordToggleIcon = document.getElementById('passwordToggleIcon');
+  // ── Password visibility toggles (eye / eye-slash) ──
+  // Wired per .input-group-password group rather than by id, so the sign-up
+  // page's two password fields get the same behaviour as the login page's one
+  // without duplicating the handler.
+  document.querySelectorAll('.input-group-password').forEach(function (group) {
+    const field = group.querySelector('input');
+    const toggle = group.querySelector('.auth-password-toggle');
+    const icon = toggle && toggle.querySelector('i');
+    if (!field || !toggle || !icon) return;
 
-  if (passwordToggle && passwordField && passwordToggleIcon) {
-    passwordToggle.addEventListener('click', function () {
-      const show = passwordField.type === 'password';
-      passwordField.type = show ? 'text' : 'password';
-      passwordToggleIcon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-      passwordToggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    toggle.addEventListener('click', function () {
+      const show = field.type === 'password';
+      field.type = show ? 'text' : 'password';
+      icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+      toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      toggle.setAttribute('aria-pressed', String(show));
 
       // Brief "flick" cue — pick up, swap, settle.
-      passwordToggle.classList.add('is-switching');
-      setTimeout(function () { passwordToggle.classList.remove('is-switching'); }, 160);
+      toggle.classList.add('is-switching');
+      setTimeout(function () { toggle.classList.remove('is-switching'); }, 160);
     });
+  });
+
+  // ── Sign-up page ──
+  if (signupForm) {
+    const nameField     = document.getElementById('signup-name-field');
+    const emailField    = document.getElementById('signup-email-field');
+    const passwordField = document.getElementById('signup-password-field');
+    const confirmField  = document.getElementById('signup-confirm-field');
+    const termsBox      = document.getElementById('signup-terms');
+    const meter         = document.getElementById('signupStrength');
+    const meterLabel    = document.getElementById('signupStrengthLabel');
+
+    // Reuse the shared department → course → year cascade from ui.js, so
+    // sign-up offers exactly the taxonomy the student lists group by.
+    initOrgModalSelects('signupDepartment', 'signupCourse', 'signupYear');
+
+    // One label per score, 0–4. scorePassword returns 1 + (character-class
+    // count) for anything long enough, so 0 is empty, 1 is below the length
+    // floor, 2 is a single class, 3 is two, and 4 is three or more.
+    const PASSWORD_HELPER_TEXT = '8+ characters required with a letter and number';
+    const STRENGTH_LABELS = [
+      PASSWORD_HELPER_TEXT,
+      'Too short',
+      'Weak',
+      'Fair',
+      'Strong',
+    ];
+
+    /** Repaint the strength meter from the current password value. */
+    function updateStrengthMeter() {
+      const level = scorePassword(passwordField.value);
+      meter.dataset.level = String(level);
+      meterLabel.textContent = STRENGTH_LABELS[level];
+    }
+
+    // Mark a field invalid, or clear the mark if it is now valid.
+    function setFieldState(field, ok) {
+      if (!field) return;
+      field.classList.toggle('is-invalid', !ok);
+    }
+
+    // Live re-validation: once a field has been marked, correct it as the
+    // user fixes it rather than making them submit again to find out.
+    function revalidate(field, isValid) {
+      if (field.classList.contains('is-invalid')) setFieldState(field, isValid());
+    }
+
+    nameField.addEventListener('blur', function () {
+      setFieldState(nameField, nameField.value.trim().length > 0);
+    });
+    nameField.addEventListener('input', function () {
+      revalidate(nameField, function () { return nameField.value.trim().length > 0; });
+    });
+
+    emailField.addEventListener('blur', function () {
+      setFieldState(emailField, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value.trim()));
+    });
+    emailField.addEventListener('input', function () {
+      revalidate(emailField, function () {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value.trim());
+      });
+    });
+
+    passwordField.addEventListener('blur', function () {
+      setFieldState(passwordField, scorePassword(passwordField.value) >= 2);
+    });
+    passwordField.addEventListener('input', function () {
+      updateStrengthMeter();
+      revalidate(passwordField, function () {
+        return scorePassword(passwordField.value) >= 2;
+      });
+      revalidate(confirmField, function () {
+        return confirmField.value === passwordField.value;
+      });
+    });
+
+    confirmField.addEventListener('blur', function () {
+      setFieldState(confirmField, confirmField.value.length > 0 && confirmField.value === passwordField.value);
+    });
+    confirmField.addEventListener('input', function () {
+      revalidate(confirmField, function () {
+        return confirmField.value === passwordField.value;
+      });
+    });
+
+    termsBox.addEventListener('blur', function () {
+      setFieldState(termsBox, termsBox.checked);
+    });
+    termsBox.addEventListener('change', function () {
+      revalidate(termsBox, function () { return termsBox.checked; });
+    });
+
+    signupForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const password = passwordField.value;
+      const confirm  = confirmField.value;
+
+      setFieldState(nameField,  nameField.value.trim().length > 0);
+      setFieldState(emailField, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value.trim()));
+      setFieldState(passwordField, scorePassword(password) >= 2);
+      setFieldState(confirmField,  confirm.length > 0 && confirm === password);
+      setFieldState(termsBox,      termsBox.checked);
+
+      // Focus the first field still marked invalid, so keyboard and screen
+      // reader users land on the problem instead of hunting for it.
+      // No smooth behavior: this page honours prefers-reduced-motion.
+      const firstInvalid = signupForm.querySelector('.is-invalid');
+      if (firstInvalid) {
+        firstInvalid.focus();
+        if (firstInvalid.scrollIntoView) {
+          firstInvalid.scrollIntoView({ block: 'center' });
+        }
+        return;
+      }
+
+      registerAccount({
+        name:       nameField.value,
+        email:      emailField.value,
+        password:   password,
+        department: document.getElementById('signupDepartment').value,
+        course:     document.getElementById('signupCourse').value,
+        yearLevel:  document.getElementById('signupYear').value,
+      });
+    });
+
+    updateStrengthMeter();
   }
+
+
 
   // ── Hero carousel ──
   // Story-style autoplay: one slim progress segment per slide. The active
@@ -162,6 +436,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // segments hold solid, upcoming ones show only a dim track, and hovering
   // the hero pauses the current fill in place. Clicks and arrows restart the
   // active segment's fill from empty.
+  //
+  // Navigation is arrows-only: there is no play/pause control. Autoplay runs
+  // continuously and stops only while the pointer is over the hero or focus
+  // is inside it, then resumes on leave.
   (function () {
     const bgSlides      = document.querySelectorAll('.auth-hero-slide');
     const slideContents = document.querySelectorAll('.auth-hero-slide-content');
@@ -170,7 +448,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const slideNum      = document.querySelector('.auth-hero-slide-num');
     const prevBtn       = document.getElementById('heroPrev');
     const nextBtn       = document.getElementById('heroNext');
-    const pauseBtn      = document.getElementById('heroPause');
     const hero          = document.querySelector('.auth-hero');
 
     let current    = 0;
@@ -178,8 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const DWELL_MS = 5000; // keep in sync with heroProgressFill duration in auth.css
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let autoTimer  = null; // reduced-motion fallback only
-    let isPaused   = false;
-    let isManuallyPaused = false;
+    let isPaused   = false; // hover / focus only — there is no manual pause control
 
     /** Restart a segment's fill so it starts empty again. */
     function restartFill(ind) {
@@ -265,8 +541,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function startAuto() {
       stopAuto();
-      isPaused = isManuallyPaused;
-      setPlayState(isPaused ? 'paused' : 'running');
+      isPaused = false;
+      setPlayState('running');
       // Reduced motion disables the CSS fill, so drive the advance with a timer.
       if (reduceMotion) {
         autoTimer = setInterval(function () {
@@ -289,13 +565,6 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!isPaused) return;
       isPaused = false;
       setPlayState('running');
-    }
-
-    function updatePauseButton() {
-      if (!pauseBtn) return;
-      pauseBtn.setAttribute('aria-pressed', String(isPaused));
-      pauseBtn.setAttribute('aria-label', isPaused ? 'Resume slide rotation' : 'Pause slide rotation');
-      pauseBtn.querySelector('i').className = isPaused ? 'bi bi-play-fill' : 'bi bi-pause-fill';
     }
 
     // Auto-advance fires when the active segment finishes filling.
@@ -324,23 +593,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // Arrow buttons — reset the active segment's fill via goToSlide(restart)
     if (prevBtn) prevBtn.addEventListener('click', function () { goToSlide(current - 1, true); });
     if (nextBtn) nextBtn.addEventListener('click', function () { goToSlide(current + 1, true); });
-    if (pauseBtn) pauseBtn.addEventListener('click', function () {
-      isManuallyPaused = !isManuallyPaused;
-      if (isManuallyPaused) pauseAuto(); else resumeAuto();
-      updatePauseButton();
-    });
 
-    // Pause autoplay while hovering the hero so it doesn't fight manual navigation
+    // Pause autoplay while hovering the hero so it doesn't fight manual
+    // navigation. Autoplay resumes on leave — there is no manual pause control.
     if (hero) {
       hero.addEventListener('mouseenter', pauseAuto);
-      hero.addEventListener('mouseleave', function () { if (!isManuallyPaused) resumeAuto(); updatePauseButton(); });
-      hero.addEventListener('focusin', function () { pauseAuto(); updatePauseButton(); });
+      hero.addEventListener('mouseleave', resumeAuto);
+      hero.addEventListener('focusin', pauseAuto);
       hero.addEventListener('focusout', function (event) {
-        if (!hero.contains(event.relatedTarget) && !isManuallyPaused) { resumeAuto(); updatePauseButton(); }
+        if (!hero.contains(event.relatedTarget)) resumeAuto();
       });
     }
 
     goToSlide(current, true);
-    updatePauseButton();
   })();
 });

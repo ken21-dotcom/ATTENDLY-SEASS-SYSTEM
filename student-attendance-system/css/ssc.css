@@ -90,6 +90,27 @@
 .student-table td .severity-pill { white-space: nowrap; }
 
 /* ── Filter + export toolbar ── */
+.role-main > .stat-grid {
+  margin-bottom: 10px;
+}
+
+.role-main > .dashboard-card {
+  margin-top: 8px;
+}
+
+.role-main > .dashboard-card {
+  padding: 18px 18px 16px;
+}
+
+.role-main > .dashboard-card .card-heading {
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.role-main > .dashboard-card .nav-tabs.role-tabs {
+  margin: 0 0 12px;
+}
+
 .report-toolbar {
   display: flex;
   align-items: end;
@@ -127,14 +148,16 @@
 
 .field-group .form-select:focus {
   border-color: var(--color-border-focus);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 2px rgba(14, 159, 110, .18);
 }
 
 /* ── Report export actions ── */
 .report-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 4px;
 }
 
 .report-actions .btn {
@@ -142,6 +165,8 @@
   align-items: center;
   gap: 6px;
   font-size: .76rem;
+  min-height: 38px;
+  padding-inline: 14px;
 }
 
 /* ── Tabs styled like the app (reports page) ── */
@@ -173,7 +198,7 @@
   background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-700) 100%);
   border-color: var(--brand-600);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(14,159,110,.25);
+  box-shadow: 0 0 0 1px rgba(14, 159, 110, .18);
 }
 
 /* ── Polished role-page buttons ── */

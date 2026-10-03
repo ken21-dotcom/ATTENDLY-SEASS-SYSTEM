@@ -419,34 +419,45 @@ button.text-link {
 
 .dashboard-card {
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   background: var(--color-bg-card);
   box-shadow: var(--shadow-card), 0 0 0 0.5px rgba(0,0,0,.02);
   transition: box-shadow var(--transition-normal) var(--ease),
               transform var(--transition-normal) var(--ease),
               border-color var(--transition-normal) var(--ease);
   position: relative;
-  /* visible so the card-heading legend label can straddle the top border;
-     the rounded corners stay clean via border-radius on the ::before bar */
-  overflow: visible;
-  /* legend label inset — flush cards share the heading's 16px gutter;
-     padded variant cards override this to match their own gutter */
-  --legend-gutter: 16px;
+  overflow: hidden;
 }
 
-/* Section-header divider — the top accent on cards whose .card-heading
-   carries a legend pill ("Your activity", "From the SCC", "Event log", …).
-   Decorative: stays always visible at a soft center-bright glow, curving
-   with the card's rounded top edge exactly like the stat-card bar. */
+/* Top accent bar — same --accent-bar-* treatment as stat cards and role
+   panels. This used to be a solid bar permanently visible at rest, which
+   meant the student dashboard read differently from every other card
+   family until dashboard-hover.css hid it again. */
 .dashboard-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  background: var(--accent-glow);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  height: var(--accent-bar-height);
+  background: var(--accent-bar-fill);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  opacity: 0;
+  transform-origin: center;
+  transform: scaleX(var(--accent-bar-rest-scale));
+  transition: var(--accent-bar-transition);
+  z-index: 2;
+}
+
+/* The two informational asides are excluded from the hover system in
+   dashboard-hover.css — they are not interactive, so they neither lift nor
+   scale their bar in. That leaves them with no accent bar at all under the
+   base rule above, so restore it permanently. Kept as its own rule because
+   the exclusion is deliberate, not an oversight. */
+.appeal-guide::before,
+.biometric-guide::before {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 /* Dashboard cards contain information and controls; they are not themselves
@@ -461,6 +472,7 @@ button.text-link {
   font-size: .76rem;
   font-weight: 600;
   letter-spacing: .01em;
+  margin-bottom: 12px;
 }
 
 .card-menu {
@@ -513,13 +525,12 @@ button.text-link {
   margin-top: 18px;
 }
 
-.attendance-chart-card,
-.announcements-card,
-.calendar-card,
-.weather-card {
+/* NOTE: .announcements-card, .calendar-card and .weather-card were removed from
+   this group. Those panels are `class="dash-panel <name>-panel"` in
+   student-dashboard.html and space themselves with .dash-panel-header /
+   .dash-panel-body, so the old rule could never have matched them. */
+.attendance-chart-card {
   padding: 22px;
-  /* Ensure content clears the top accent bar (5px ::before) */
-  padding-top: 28px;
 }
 
 .card-heading h2 {
@@ -531,30 +542,26 @@ button.text-link {
   line-height: 1.3;
 }
 
-/* ── Card-heading legend label ──
-   A section label that straddles the card's top border the way a
-   <fieldset> legend does: a solid surface background plus horizontal
-   padding interrupts the border line behind the text, is inset from the
-   card's left edge by the content gutter, and sits vertically centred
-   on the border line. */
+/* ── Card-heading section kicker ── */
 .card-heading .section-kicker {
-  position: absolute;
-  top: -14px;
-  left: var(--legend-gutter);
-  margin: 0;
-  padding: 4px 14px;
-  border: 1px solid var(--color-border-default);
-  border-radius: 999px;
-  background: var(--color-bg-card);
-  z-index: 1;
-  white-space: nowrap;
+  position: static;
+  margin: 0 0 4px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--brand-500);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
 /* Padded variant cards: keep the legend label on the same left edge as
    the card's own content gutter instead of the flush-card default. */
-.attendance-chart-card, .announcements-card, .calendar-card, .weather-card { --legend-gutter: 22px; }
+.attendance-chart-card { --legend-gutter: 22px; }
 .records-card { --legend-gutter: 28px; }
-.appeal-card, .profile-card, .profile-biometric-card { --legend-gutter: 26px; }
+.appeal-card, .profile-card { --legend-gutter: 26px; }
 .student-id-card { --legend-gutter: 28px; }
 
 /* Records card uses a tinted gradient surface — match the label to it
@@ -750,10 +757,28 @@ button.text-link {
 /* Calendar */
 .calendar-controls { display: flex; gap: 6px; }
 
+.calendar-panel .dash-panel-body {
+  padding: 18px 20px;
+}
+
 .calendar-controls .icon-button {
   width: 32px;
   height: 32px;
   font-size: .78rem;
+}
+
+.calendar-controls .icon-button:hover,
+.calendar-controls .icon-button:focus-visible {
+  background: var(--brand-50);
+  border-color: var(--brand-400);
+  color: var(--brand-700);
+}
+
+[data-theme="dark"] .calendar-controls .icon-button:hover,
+[data-theme="dark"] .calendar-controls .icon-button:focus-visible {
+  background: var(--color-bg-input);
+  border-color: var(--brand-400);
+  color: var(--color-text-success-light);
 }
 
 .calendar-weekdays,
@@ -765,7 +790,7 @@ button.text-link {
 }
 
 .calendar-weekdays {
-  margin: 18px 0 8px;
+  margin: 4px 0 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--color-border-default);
   color: var(--color-text-muted);
@@ -853,7 +878,7 @@ button.text-link {
   display: flex;
   gap: 16px;
   margin-top: 16px;
-  padding-top: 12px;
+  padding: 12px 0 2px;
   border-top: 1px solid var(--color-border-default);
   color: var(--color-text-muted);
   font-size: .66rem;
@@ -1094,17 +1119,6 @@ button.text-link {
 }
 
 /* Appeal Styles */
-.appeal-help {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-top: 16px;
-  color: var(--color-text-muted);
-  font-size: .76rem;
-}
-
-.appeal-help i { color: var(--bs-primary); }
-
 .appeal-link {
   color: var(--bs-primary);
   font-size: .76rem;
@@ -1322,8 +1336,7 @@ button.text-link {
   color: var(--brand-600);
 }
 
-.profile-card,
-.profile-biometric-card { padding: 26px; }
+.profile-card { padding: 26px; }
 
 .profile-card .form-label {
   color: var(--color-text-primary);
@@ -1353,37 +1366,11 @@ button.text-link {
   font-size: .78rem;
 }
 
-.profile-biometric-card {
-  align-self: start;
-  background: linear-gradient(160deg, var(--brand-50) 0%, #fff 100%);
-  border-color: var(--brand-100);
-}
-
-.profile-biometric-card .guide-icon {
-  display: block;
-  margin-bottom: 12px;
-}
-
-.profile-biometric-card .section-kicker {
-  margin-bottom: 6px;
-}
-
-.profile-biometric-card h2 {
-  margin: 6px 0 16px;
-  font-size: 1.05rem;
-  font-weight: 750;
-}
-
-.profile-biometric-card .enrollment-pill {
-  margin-bottom: 14px;
-}
-
-.profile-note {
-  margin: 16px 0;
-  color: var(--color-text-muted);
-  font-size: .78rem;
-  line-height: 1.5;
-}
+/* NOTE: .profile-biometric-card and .profile-note were removed here. That card
+   is .biometric-enroll-card / .biometric-guide in the biometric pages, and it
+   already gets its 26px padding from the .biometric-enroll-card group below.
+   .guide-icon and .enrollment-pill keep their standalone rules (student.js
+   toggles the latter at runtime). */
 
 /* Student Biometric Styles */
 .biometric-layout {

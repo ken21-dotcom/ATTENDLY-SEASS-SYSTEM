@@ -873,6 +873,20 @@
   .kiosk-live-pulse i { animation: none; }
 }
 
+/* ============================================================
+   Legacy kiosk styles, wrapped in @layer.
+
+   Layered rules lose to every unlayered rule of equal specificity,
+   so most of what follows is inert — it is superseded by the
+   unlayered rules above. Only .kiosk-count-pct,
+   .kiosk-result-done and .kiosk-result-icon are defined solely
+   here and therefore still take effect.
+
+   Kept as-is deliberately: unwrapping the block would promote
+   hundreds of stale declarations above the current design and
+   change how the kiosk renders. Prune it in a separate pass
+   that can be verified visually.
+   ============================================================ */
 @layer kioskLegacy {
 
 /* Ambient glow behind the stage */

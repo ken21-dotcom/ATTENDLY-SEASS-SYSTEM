@@ -43,5 +43,9 @@ return [
     // ─── App ────────────────────────────────────────────────────
     'app' => [
         'env' => 'development',   // 'development' or 'production'
+        // URL prefix the API is mounted under. The front controller strips
+        // this from REQUEST_URI before routing, and js/api.js must be
+        // pointed at <backend>/<prefix> (e.g. http://localhost:8000/api).
+        'api_prefix' => '/api',
     ],
 ];
